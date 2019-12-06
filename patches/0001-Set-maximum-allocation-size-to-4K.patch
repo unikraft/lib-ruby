@@ -1,0 +1,43 @@
+From 2cf7cf83a62d613255bfbe60a5f3b52bff94594a Mon Sep 17 00:00:00 2001
+From: Andrei Gogonea <andrei.gogonea09@gmail.com>
+Date: Sun, 1 Dec 2019 12:38:07 +0200
+Subject: [PATCH] Set maximum allocation size to 4K
+
+This should be reverted once we will have page tables support.
+
+Signed-off-by: Andrei Gogonea <andrei.gogonea09@gmail.com>
+Signed-off-by: Costin Lupu <costin.lupu@cs.pub.ro>
+---
+ gc.c             | 2 +-
+ transient_heap.c | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/gc.c b/gc.c
+index 0df7189..f926c69 100644
+--- a/gc.c
++++ b/gc.c
+@@ -650,7 +650,7 @@ typedef struct rb_objspace {
+ 
+ 
+ /* default tiny heap size: 16KB */
+-#define HEAP_PAGE_ALIGN_LOG 14
++#define HEAP_PAGE_ALIGN_LOG 12
+ #define CEILDIV(i, mod) (((i) + (mod) - 1)/(mod))
+ enum {
+     HEAP_PAGE_ALIGN = (1UL << HEAP_PAGE_ALIGN_LOG),
+diff --git a/transient_heap.c b/transient_heap.c
+index 55a7963..01bdac2 100644
+--- a/transient_heap.c
++++ b/transient_heap.c
+@@ -51,7 +51,7 @@
+ #define TRANSIENT_HEAP_PROMOTED_DEFAULT_SIZE 1024
+ 
+                                           /*  K      M */
+-#define TRANSIENT_HEAP_BLOCK_SIZE  (1024 *   32       ) /* 32KB int16_t */
++#define TRANSIENT_HEAP_BLOCK_SIZE  (1024 *    4       ) /* 32KB int16_t */
+ #define TRANSIENT_HEAP_TOTAL_SIZE  (1024 * 1024 *   32) /* 32 MB */
+ #define TRANSIENT_HEAP_ALLOC_MAX   (1024 *    2       ) /* 2 KB */
+ #define TRANSIENT_HEAP_BLOCK_NUM   (TRANSIENT_HEAP_TOTAL_SIZE / TRANSIENT_HEAP_BLOCK_SIZE)
+-- 
+2.20.1
+
