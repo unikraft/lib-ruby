@@ -1,0 +1,210 @@
+#  SPDX-License-Identifier: BSD-3-Clause
+#
+#  Ruby Makefile.uk
+#
+#  Authors: Andrei Gogonea <andrei.gogonea09@gmail.com>
+#           Costin Lupu <costin.lupu@cs.pub.ro>
+#
+#  Copyright (c) 2019, University Politehnica of Bucharest. All rights reserved.
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions
+#  are met:
+#
+#  1. Redistributions of source code must retain the above copyright
+#     notice, this list of conditions and the following disclaimer.
+#  2. Redistributions in binary form must reproduce the above copyright
+#     notice, this list of conditions and the following disclaimer in the
+#     documentation and/or other materials provided with the distribution.
+#  3. Neither the name of the copyright holder nor the names of its
+#     contributors may be used to endorse or promote products derived from
+#     this software without specific prior written permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+#  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+#  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+#  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+#  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+#  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+#  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+#  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+#  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+#  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+#  POSSIBILITY OF SUCH DAMAGE.
+#
+#  THIS HEADER MAY NOT BE EXTRACTED OR MODIFIED IN ANY WAY.
+#
+
+################################################################################
+# Library registration
+################################################################################
+$(eval $(call addlib_s,libruby,$(CONFIG_LIBRUBY)))
+
+################################################################################
+# Sources
+################################################################################
+LIBRUBY_MAJOR=2
+LIBRUBY_MINOR=6
+LIBRUBY_REVISION=0
+LIBRUBY_VERSION=$(LIBRUBY_MAJOR)_$(LIBRUBY_MINOR)
+LIBRUBY_ARCHIVE=ruby_$(LIBRUBY_VERSION).zip
+LIBRUBY_URL=https://github.com/ruby/ruby/archive/$(LIBRUBY_ARCHIVE)
+LIBRUBY_DIR=ruby-ruby_$(LIBRUBY_VERSION)
+LIBRUBY_PATCHDIR=$(LIBRUBY_BASE)/patches
+$(eval $(call fetch,libruby,$(LIBRUBY_URL),ruby_$(LIBRUBY_ARCHIVE)))
+$(eval $(call patch,libruby,$(LIBRUBY_PATCHDIR),$(LIBRUBY_DIR)))
+
+################################################################################
+# Global and common flags
+################################################################################
+# Suppress flags
+LIBRUBY_SUPPRESS_FLAGS = -Wno-cast-function-type -Wno-long-long \
+	-Wno-missing-field-initializers -Wno-overlength-strings \
+	-Wno-packed-bitfield-compat -Wno-tautological-compare \
+	-Wno-unused-parameter -Wno-unused-value -Wno-implicit-fallthrough \
+	-Wno-unused-but-set-variable
+LIBRUBY_SUPRESS_CFLAGS-y   += $(LIBRUBY_SUPPRESS_FLAGS) \
+	-Wno-pointer-to-int-cast -Wno-int-to-pointer-cast
+LIBRUBY_SUPRESS_CXXFLAGS-y += $(LIBRUBY_SUPPRESS_FLAGS)
+LIBRUBY_CFLAGS-y           += $(LIBRUBY_SUPRESS_CFLAGS-y)
+LIBRUBY_CXXFLAGS-y         += $(LIBRUBY_SUPRESS_CXXFLAGS-y)
+
+################################################################################
+# Helpers
+################################################################################
+LIBRUBY_SRC=$(LIBRUBY_ORIGIN)/$(LIBRUBY_DIR)
+
+################################################################################
+# Global and common includes
+################################################################################
+LIBRUBY_CINCLUDES-y += -I$(LIBRUBY_BASE)/include \
+	-I$(LIBRUBY_BASE)/generated \
+	-I$(LIBRUBY_SRC) \
+	-I$(LIBRUBY_SRC)/include \
+	-I$(LIBRUBY_SRC)/enc/unicode/12.1.0
+
+################################################################################
+# Core
+################################################################################
+# As taken from original build:
+LIBRUBY_CFLAGS-y += -std=gnu99 -D_FORTIFY_SOURCE=2 \
+	 -fno-strict-overflow -fvisibility=hidden -fexcess-precision=standard \
+	-DRUBY_EXPORT -DCANONICALIZATION_FOR_MATHN
+
+ifeq ($(CONFIG_LIBRUBY_MINI),y)
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/dmydln.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/miniinit.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/miniprelude.c
+else
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/dln.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/localeinit.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/loadpath.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/prelude.c
+endif
+
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/main.c
+LIBRUBY_MAIN_FLAGS-y += -Dmain=ruby_main
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/array.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/ast.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/bignum.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/class.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/compar.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/compile.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/complex.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/cont.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/debug.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/debug_counter.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/dir.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/dln_find.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/encoding.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/enum.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/enumerator.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/error.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/eval.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/file.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/gc.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/hash.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/inits.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/io.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/iseq.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/load.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/marshal.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/math.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/mjit.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/mjit_compile.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/node.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/numeric.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/object.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/pack.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/parse.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/proc.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/process.c
+LIBRUBY_PROCESS_FLAGS-y += -Wno-incompatible-pointer-types
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/random.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/range.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/rational.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/re.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/regcomp.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/regenc.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/regerror.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/regexec.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/regparse.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/regsyntax.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/ruby.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/safe.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/signal.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/sprintf.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/st.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/strftime.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/string.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/struct.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/symbol.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/thread.c
+LIBRUBY_THREAD_FLAGS += -Wno-unused-function
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/time.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/transcode.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/transient_heap.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/util.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/variable.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/version.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/vm.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/vm_backtrace.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/vm_dump.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/vm_trace.c
+LIBRUBY_SRCS-$(CONFIG_ARCH_X86_64) += $(LIBRUBY_SRC)/coroutine/amd64/Context.S
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/enc/ascii.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/enc/us_ascii.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/enc/unicode.c
+LIBRUBY_UNICODE_FLAGS-y += -I$(LIBRUBY_SRC)/enc/unicode/12.1.0/
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/enc/utf_8.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/enc/trans/newline.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/./missing/setproctitle.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/addr2line.c
+
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/dmyext.c
+
+ifneq ($(CONFIG_LIBRUBY_MINI),y)
+# Init_enc() is also in miniinit.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/dmyenc.c
+endif
+
+################################################################################
+# Prepare rules
+################################################################################
+NPROC=$(shell nproc)
+JOBS=$(shell echo $(NPROC) \* 2 | bc)
+LIBRUBY_CONFIGURE_COMMON_PARAMS=--with-static-linked-ext --disable-install-doc --disable-install-rdoc
+
+# Configure origin
+$(LIBRUBY_BUILD)/.configured: $(LIBRUBY_BUILD)/.origin
+	cd $(LIBRUBY_SRC) && \
+		autoconf && \
+		./configure $(LIBRUBY_CONFIGURE_COMMON_PARAMS) && \
+		touch $@
+
+# Build origin
+$(LIBRUBY_BUILD)/.build: $(LIBRUBY_BUILD)/.configured
+	cd $(LIBRUBY_SRC) && make -j$(JOBS) && touch $@
+
+UK_PREPARE += $(LIBRUBY_BUILD)/.build
+
