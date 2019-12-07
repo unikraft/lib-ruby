@@ -429,4 +429,13 @@
 #define USE_MJIT 1
 #define HAVE_PTHREAD_H 1
 #define RUBY_PLATFORM "x86_64-unikraft"
+
+/* Threads */
+#define NON_SCALAR_THREAD_ID 1
+#ifndef fill_thread_id_str
+# define fill_thread_id_string(thid, buf) ((void *)(uintptr_t)pthread_to_unsigned_long(&thid))
+# define fill_thread_id_str(th) (void)0
+# define thread_id_str(th) ((void *)(uintptr_t)pthread_to_unsigned_long(&(th)->thread_id))
+# define PRI_THREAD_ID "p"
+#endif
 #endif /* INCLUDE_RUBY_CONFIG_H */

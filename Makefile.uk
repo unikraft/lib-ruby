@@ -91,6 +91,8 @@ LIBRUBY_CFLAGS-y += -std=gnu99 -D_FORTIFY_SOURCE=2 \
 	 -fno-strict-overflow -fvisibility=hidden -fexcess-precision=standard \
 	-DRUBY_EXPORT -DCANONICALIZATION_FOR_MATHN
 
+LIBRUBY_SRCS-y += $(LIBRUBY_BASE)/thread.c|unikraft
+
 ifeq ($(CONFIG_LIBRUBY_MINI),y)
 LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/dmydln.c
 LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/miniinit.c
