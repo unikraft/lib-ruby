@@ -1,0 +1,10 @@
+menuconfig LIBRUBY
+	bool "Ruby"
+	default n
+	select LIBNOLIBC if !HAVE_LIBC
+	select LIBUKDEBUG
+	select LIBUKALLOC
+	select LIBUKSCHED
+
+if LIBRUBY
+endif
