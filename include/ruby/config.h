@@ -1,5 +1,8 @@
 #ifndef INCLUDE_RUBY_CONFIG_H
 #define INCLUDE_RUBY_CONFIG_H 1
+
+#include <uk/config.h>
+
 /* confdefs.h */
 #define STDC_HEADERS 1
 #define HAVE_SYS_TYPES_H 1
@@ -34,7 +37,7 @@
 #define HAVE_LOCALE_H 1
 #define HAVE_MALLOC_H 1
 #define HAVE_PWD_H 1
-#define HAVE_SANITIZER_ASAN_INTERFACE_H 1
+/* #define HAVE_SANITIZER_ASAN_INTERFACE_H 1 */
 #define HAVE_STDALIGN_H 1
 #define HAVE_SYS_EVENTFD_H 1
 #define HAVE_SYS_FCNTL_H 1
@@ -46,12 +49,12 @@
 #define HAVE_SYS_SELECT_H 1
 #define HAVE_SYS_SENDFILE_H 1
 #define HAVE_SYS_SOCKET_H 1
-#define HAVE_SYS_SYSCALL_H 1
+/* TODO #define HAVE_SYS_SYSCALL_H 1 */
 #define HAVE_SYS_SYSMACROS_H 1
 #define HAVE_SYS_TIME_H 1
 #define HAVE_SYS_TIMES_H 1
 #define HAVE_SYS_UIO_H 1
-#define HAVE_SYSCALL_H 1
+/* TODO #define HAVE_SYSCALL_H 1 */
 #define HAVE_TIME_H 1
 #define HAVE_UCONTEXT_H 1
 #define HAVE_UTIME_H 1
@@ -213,7 +216,7 @@
 #define SIZEOF_UINTPTR_T 8
 #define HAVE_SSIZE_T 1
 #define SIZEOF_SSIZE_T 8
-#define STACK_END_ADDRESS __libc_stack_end
+/* #define STACK_END_ADDRESS __libc_stack_end */
 #define GETGROUPS_T gid_t
 #define RETSIGTYPE void
 #define HAVE_ALLOCA_H 1
@@ -240,10 +243,10 @@
 #define HAVE_TGAMMA 1
 #define SPT_TYPE SPT_REUSEARGV
 #define HAVE_SIGNBIT 1
-#define HAVE_FORK 1
+/*#define HAVE_FORK 1
 #define HAVE_VFORK 1
 #define HAVE_WORKING_VFORK 1
-#define HAVE_WORKING_FORK 1
+#define HAVE_WORKING_FORK 1*/
 #define HAVE__LONGJMP 1
 #define HAVE_ATAN2L 1
 #define HAVE_ATAN2F 1
@@ -295,7 +298,7 @@
 #define HAVE_LOG2 1
 #define HAVE_LSTAT 1
 #define HAVE_LUTIMES 1
-#define HAVE_MALLOC_USABLE_SIZE 1
+/*#define HAVE_MALLOC_USABLE_SIZE 1 */
 #define HAVE_MBLEN 1
 #define HAVE_MEMALIGN 1
 #define HAVE_WRITEV 1
@@ -338,7 +341,7 @@
 #define HAVE_SIGPROCMASK 1
 #define HAVE_SINH 1
 #define HAVE_SYMLINK 1
-#define HAVE_SYSCALL 1
+/* TODO #define HAVE_SYSCALL 1 */
 #define HAVE_SYSCONF 1
 #define HAVE_TANH 1
 #define HAVE_TELLDIR 1
@@ -381,8 +384,8 @@
 #define HAVE_LIBRT 1
 #define HAVE_TIMER_CREATE 1
 #define HAVE_TIMER_SETTIME 1
-#define HAVE_STRUCT_TM_TM_ZONE 1
-#define HAVE_TM_ZONE 1
+/*#define HAVE_STRUCT_TM_TM_ZONE 1*/
+/*#define HAVE_TM_ZONE 1*/
 #define HAVE_STRUCT_TM_TM_GMTOFF 1
 #define HAVE_DAYLIGHT 1
 #define NEGATIVE_TIME_T 1
@@ -410,9 +413,13 @@
 #define HAVE_SETCONTEXT 1
 #define USE_ELF 1
 #define HAVE_ELF_H 1
+#if CONFIG_LIBZLIB
 #define HAVE_LIBZ 1
+#endif
+#if CONFIG_LIBBACKTRACE
 #define HAVE_BACKTRACE 1
-#define HAVE_VALGRIND_MEMCHECK_H 1
+#endif
+/* #define HAVE_VALGRIND_MEMCHECK_H 1 */
 #define DLEXT_MAXLEN 3
 #define DLEXT ".so"
 #define HAVE__SETJMP 1
@@ -421,5 +428,5 @@
 #define RUBY_JMP_BUF jmp_buf
 #define USE_MJIT 1
 #define HAVE_PTHREAD_H 1
-#define RUBY_PLATFORM "x86_64-linux"
+#define RUBY_PLATFORM "x86_64-unikraft"
 #endif /* INCLUDE_RUBY_CONFIG_H */
