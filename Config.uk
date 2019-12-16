@@ -22,6 +22,16 @@ config LIBRUBY_MINI
 	bool "Mini configuration"
 	default n
 
+config LIBRUBY_MAIN_FUNCTION
+	bool "Provide main function"
+	imply LIBUKLIBPARAM
+	imply LIBVFSCORE_AUTOMOUNT_ROOTFS
+	imply LIBVFSCORE_ROOTFS_9PFS
+	imply LIBDEVFS_AUTOMOUNT
+	imply LIBDEVFS_DEV_NULL
+	imply LIBUK9P
+	default n
+
 config LIBRUBY_EXT
 	bool "Enable extensions"
 	depends on !LIBRUBY_MINI
