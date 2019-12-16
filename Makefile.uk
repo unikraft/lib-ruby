@@ -40,6 +40,7 @@
 ################################################################################
 $(eval $(call addlib_s,libruby,$(CONFIG_LIBRUBY)))
 $(eval $(call addlib_s,libruby_ext,$(CONFIG_LIBRUBY_EXT)))
+$(eval $(call addlib_s,libruby_enc,$(CONFIG_LIBRUBY_ENC)))
 
 ################################################################################
 # Sources
@@ -462,10 +463,84 @@ LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/sdbm/init.c|sdbm
 LIBRUBY_EXT_INIT_FLAGS-y += -I$(LIBRUBY_SRC)/ext/sdbm
 endif
 
+################################################################################
+# Encodings
+################################################################################
+LIBRUBY_ENC_CFLAGS-y += $(LIBRUBY_CINCLUDES-y)
+LIBRUBY_ENC_CFLAGS-y += $(LIBRUBY_SUPPRESS_FLAGS)
+LIBRUBY_ENC_CFLAGS-y += -DRUBY_EXPORT=1 -DONIG_ENC_REGISTER=rb_enc_register
+
+ifeq ($(CONFIG_LIBRUBY_ENC),y)
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/enc/encinit.c
+else
 ifneq ($(CONFIG_LIBRUBY_MINI),y)
 # Init_enc() is also in miniinit.c
 LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/dmyenc.c
 endif
+endif
+
+# enc/libenc.a
+LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/encdb.c
+LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/big5.c
+LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/cp949.c
+LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/emacs_mule.c
+LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/euc_jp.c
+LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/euc_kr.c
+LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/euc_tw.c
+LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/gb2312.c
+LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/gb18030.c
+LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/gbk.c
+LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/iso_8859_1.c
+LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/iso_8859_2.c
+LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/iso_8859_3.c
+LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/iso_8859_4.c
+LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/iso_8859_5.c
+LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/iso_8859_6.c
+LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/iso_8859_7.c
+LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/iso_8859_8.c
+LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/iso_8859_9.c
+LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/iso_8859_10.c
+LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/iso_8859_11.c
+LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/iso_8859_13.c
+LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/iso_8859_14.c
+LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/iso_8859_15.c
+LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/iso_8859_16.c
+LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/koi8_r.c
+LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/koi8_u.c
+LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/shift_jis.c
+LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/utf_16be.c
+LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/utf_16le.c
+LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/utf_32be.c
+LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/utf_32le.c
+LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/windows_31j.c
+LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/windows_1250.c
+LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/windows_1251.c
+LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/windows_1252.c
+LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/windows_1253.c
+LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/windows_1254.c
+LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/windows_1257.c
+
+# enc/libtrans.a
+LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/trans/transdb.c
+LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/trans/big5.c|trans
+LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/trans/chinese.c
+LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/trans/ebcdic.c
+LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/trans/emoji.c
+LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/trans/emoji_iso2022_kddi.c
+LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/trans/emoji_sjis_docomo.c
+LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/trans/emoji_sjis_kddi.c
+LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/trans/emoji_sjis_softbank.c
+LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/trans/escape.c
+LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/trans/gb18030.c|trans
+LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/trans/gbk.c|trans
+LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/trans/iso2022.c
+LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/trans/japanese.c
+LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/trans/japanese_euc.c
+LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/trans/japanese_sjis.c
+LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/trans/korean.c
+LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/trans/single_byte.c
+LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/trans/utf8_mac.c
+LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/trans/utf_16_32.c
 
 ################################################################################
 # Prepare rules

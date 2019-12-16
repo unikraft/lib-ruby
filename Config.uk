@@ -122,4 +122,10 @@ config LIBRUBY_EXT
 		bool "sdbm"
 		default y
 	endif
+
+config LIBRUBY_ENC
+	bool "Enable encodings"
+	depends on !LIBRUBY_MINI
+	default y
+
 endif
