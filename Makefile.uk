@@ -41,6 +41,7 @@
 $(eval $(call addlib_s,libruby,$(CONFIG_LIBRUBY)))
 $(eval $(call addlib_s,libruby_ext,$(CONFIG_LIBRUBY_EXT)))
 $(eval $(call addlib_s,libruby_enc,$(CONFIG_LIBRUBY_ENC)))
+$(eval $(call addlib_s,libruby_test,$(CONFIG_LIBRUBY_TEST)))
 
 ################################################################################
 # Sources
@@ -543,6 +544,31 @@ LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/trans/utf8_mac.c
 LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/trans/utf_16_32.c
 
 ################################################################################
+# Unit testing
+################################################################################
+LIBRUBY_TEST_CFLAGS-y += $(LIBRUBY_CINCLUDES-y)
+LIBRUBY_TEST_CFLAGS-y += $(LIBRUBY_SUPPRESS_FLAGS)
+LIBRUBY_TEST_CFLAGS-y += -DRUBY_EXTCONF_H=\"extconf.h\"
+
+$(LIBRUBY_SRC)/ext/-test-/file/init_file.c: $(LIBRUBY_SRC)/ext/-test-/file/init.c
+	ln -s $< $@
+LIBRUBY_TEST_SRCS-y += $(LIBRUBY_SRC)/ext/-test-/file/init_file.c
+LIBRUBY_TEST_INIT_FILE_FLAGS-y += -I$(LIBRUBY_SRC)/ext/-test-/file
+LIBRUBY_TEST_SRCS-y += $(LIBRUBY_SRC)/ext/-test-/file/fs.c
+LIBRUBY_TEST_FS_FLAGS-y += -I$(LIBRUBY_SRC)/ext/-test-/file
+LIBRUBY_TEST_SRCS-y += $(LIBRUBY_SRC)/ext/-test-/file/stat.c
+LIBRUBY_TEST_STAT_FLAGS-y += -I$(LIBRUBY_SRC)/ext/-test-/file
+
+$(LIBRUBY_SRC)/ext/-test-/time/init_time.c: $(LIBRUBY_SRC)/ext/-test-/time/init.c
+	ln -s $< $@
+LIBRUBY_TEST_SRCS-y += $(LIBRUBY_SRC)/ext/-test-/time/init_time.c
+LIBRUBY_TEST_INIT_TIME_FLAGS-y += -I$(LIBRUBY_SRC)/ext/-test-/time
+LIBRUBY_TEST_SRCS-y += $(LIBRUBY_SRC)/ext/-test-/time/leap_second.c
+LIBRUBY_TEST_LEAP_SECOND_FLAGS-y += -I$(LIBRUBY_SRC)/ext/-test-/time
+LIBRUBY_TEST_SRCS-y += $(LIBRUBY_SRC)/ext/-test-/time/new.c
+LIBRUBY_TEST_NEW_FLAGS-y += -I$(LIBRUBY_SRC)/ext/-test-/time
+
+################################################################################
 # Prepare rules
 ################################################################################
 NPROC=$(shell nproc)
@@ -561,4 +587,20 @@ $(LIBRUBY_BUILD)/.build: $(LIBRUBY_BUILD)/.configured
 	cd $(LIBRUBY_SRC) && make -j$(JOBS) && touch $@
 
 UK_PREPARE += $(LIBRUBY_BUILD)/.build
+
+ifeq ($(CONFIG_LIBRUBY_TEST),y)
+# Customize config: configure stack size
+$(APP_BASE)/.config.orig: $(APP_BASE)/.config
+	$(call verbose_cmd,CONFIG,libruby: $(notdir $@), \
+		cp $(APP_BASE)/.config $@ && \
+		sed -i 's/^CONFIG_STACK_SIZE_PAGE_ORDER=.*$$/CONFIG_STACK_SIZE_PAGE_ORDER=10/g' $(APP_BASE)/.config)
+
+# We need a bigger stack for tests
+LIBRUBY_TEST_PREPARED_DEPS = \
+	$(APP_BASE)/.config.orig \
+
+$(LIBRUBY_TEST_BUILD)/.prepared: $(LIBRUBY_TEST_PREPARED_DEPS)
+
+UK_PREPARE += $(LIBRUBY_TEST_BUILD)/.prepared
+endif
 

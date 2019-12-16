@@ -128,4 +128,11 @@ config LIBRUBY_ENC
 	depends on !LIBRUBY_MINI
 	default y
 
+config LIBRUBY_TEST
+	bool "Enable unit testing"
+	depends on !LIBRUBY_MINI
+	depends on LIBRUBY_EXT
+	depends on LIBRUBY_ENC
+	default y
+
 endif

@@ -100,4 +100,10 @@ void Init_ext(void)
 #if CONFIG_LIBRUBY_EXT_SDBM
     init(Init_sdbm, "sdbm");
 #endif
+
+#if CONFIG_LIBRUBY_TEST
+    /* TODO add more tests */
+    init(Init_file, "-test-/file");
+    init(Init_time, "-test-/time");
+#endif
 }
