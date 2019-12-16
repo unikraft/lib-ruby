@@ -62,14 +62,15 @@ $(eval $(call patch,libruby,$(LIBRUBY_PATCHDIR),$(LIBRUBY_DIR)))
 # Global and common flags
 ################################################################################
 # Suppress flags
-LIBRUBY_SUPPRESS_FLAGS = -Wno-cast-function-type -Wno-long-long \
+LIBRUBY_SUPPRESS_FLAGS-y = -Wno-cast-function-type -Wno-long-long \
 	-Wno-missing-field-initializers -Wno-overlength-strings \
 	-Wno-packed-bitfield-compat -Wno-tautological-compare \
 	-Wno-unused-parameter -Wno-unused-value -Wno-implicit-fallthrough \
 	-Wno-unused-but-set-variable
-LIBRUBY_SUPRESS_CFLAGS-y   += $(LIBRUBY_SUPPRESS_FLAGS) \
+LIBRUBY_SUPPRESS_FLAGS-$(call gcc_version_ge,9,0) += -Wno-address-of-packed-member
+LIBRUBY_SUPRESS_CFLAGS-y   += $(LIBRUBY_SUPPRESS_FLAGS-y) \
 	-Wno-pointer-to-int-cast -Wno-int-to-pointer-cast
-LIBRUBY_SUPRESS_CXXFLAGS-y += $(LIBRUBY_SUPPRESS_FLAGS)
+LIBRUBY_SUPRESS_CXXFLAGS-y += $(LIBRUBY_SUPPRESS_FLAGS-y)
 LIBRUBY_CFLAGS-y           += $(LIBRUBY_SUPRESS_CFLAGS-y)
 LIBRUBY_CXXFLAGS-y         += $(LIBRUBY_SUPRESS_CXXFLAGS-y)
 
@@ -193,7 +194,7 @@ LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/addr2line.c
 # Extensions
 ################################################################################
 LIBRUBY_EXT_CFLAGS-y += $(LIBRUBY_CINCLUDES-y)
-LIBRUBY_EXT_CFLAGS-y += $(LIBRUBY_SUPPRESS_FLAGS)
+LIBRUBY_EXT_CFLAGS-y += $(LIBRUBY_SUPPRESS_FLAGS-y)
 LIBRUBY_EXT_CFLAGS-y += -DRUBY_EXTCONF_H=\"extconf.h\"
 
 ifeq ($(CONFIG_LIBRUBY_MINI),y)
@@ -471,7 +472,7 @@ endif
 # Encodings
 ################################################################################
 LIBRUBY_ENC_CFLAGS-y += $(LIBRUBY_CINCLUDES-y)
-LIBRUBY_ENC_CFLAGS-y += $(LIBRUBY_SUPPRESS_FLAGS)
+LIBRUBY_ENC_CFLAGS-y += $(LIBRUBY_SUPPRESS_FLAGS-y)
 LIBRUBY_ENC_CFLAGS-y += -DRUBY_EXPORT=1 -DONIG_ENC_REGISTER=rb_enc_register
 
 ifeq ($(CONFIG_LIBRUBY_ENC),y)
@@ -550,7 +551,7 @@ LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/trans/utf_16_32.c
 # Unit testing
 ################################################################################
 LIBRUBY_TEST_CFLAGS-y += $(LIBRUBY_CINCLUDES-y)
-LIBRUBY_TEST_CFLAGS-y += $(LIBRUBY_SUPPRESS_FLAGS)
+LIBRUBY_TEST_CFLAGS-y += $(LIBRUBY_SUPPRESS_FLAGS-y)
 LIBRUBY_TEST_CFLAGS-y += -DRUBY_EXTCONF_H=\"extconf.h\"
 
 $(LIBRUBY_SRC)/ext/-test-/file/init_file.c: $(LIBRUBY_SRC)/ext/-test-/file/init.c
