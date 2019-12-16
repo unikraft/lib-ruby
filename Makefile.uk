@@ -50,6 +50,7 @@ LIBRUBY_MAJOR=2
 LIBRUBY_MINOR=6
 LIBRUBY_REVISION=0
 LIBRUBY_VERSION=$(LIBRUBY_MAJOR)_$(LIBRUBY_MINOR)
+LIBRUBY_VERSION_LONG=$(LIBRUBY_MAJOR).$(LIBRUBY_MINOR).$(LIBRUBY_REVISION)
 LIBRUBY_ARCHIVE=ruby_$(LIBRUBY_VERSION).zip
 LIBRUBY_URL=https://github.com/ruby/ruby/archive/$(LIBRUBY_ARCHIVE)
 LIBRUBY_DIR=ruby-ruby_$(LIBRUBY_VERSION)
@@ -604,3 +605,31 @@ $(LIBRUBY_TEST_BUILD)/.prepared: $(LIBRUBY_TEST_PREPARED_DEPS)
 UK_PREPARE += $(LIBRUBY_TEST_BUILD)/.prepared
 endif
 
+################################################################################
+# Root filesystem
+################################################################################
+# Root filesystem path
+RUBY_ROOTFS = $(APP_BASE)/$(path)
+
+# Configure origin
+$(RUBY_ROOTFS)/.configured: $(LIBRUBY_BUILD)/.origin
+	mkdir -p $(RUBY_ROOTFS) &>/dev/null
+	cd $(LIBRUBY_SRC) && \
+		autoconf && \
+		./configure --prefix=$(shell realpath $(APP_BASE)/$(path)) $(LIBRUBY_CONFIGURE_COMMON_PARAMS) && \
+		touch $@ && touch $(LIBRUBY_BUILD)/.configured
+
+# Build Ruby
+$(RUBY_ROOTFS)/.build: $(RUBY_ROOTFS)/.configured
+	cd $(LIBRUBY_SRC) && make -j$(JOBS) && touch $@ && touch $(LIBRUBY_BUILD)/.build
+
+# Install Ruby
+$(RUBY_ROOTFS)/.done: $(RUBY_ROOTFS)/.build
+	cd $(LIBRUBY_SRC) && make install
+	cp -r $(LIBRUBY_SRC)/.ext $(RUBY_ROOTFS)/lib/ruby/$(LIBRUBY_VERSION_LONG)/
+	cp -r $(LIBRUBY_SRC)/test $(RUBY_ROOTFS)/lib/ruby/$(LIBRUBY_VERSION_LONG)/
+	cp $(LIBRUBY_BASE)/gems-examples/Gemfile-irb $(RUBY_ROOTFS)/lib/ruby/$(LIBRUBY_VERSION_LONG)/Gemfile
+	touch $@
+
+.PHONY: ruby-rootfs
+ruby-rootfs: $(RUBY_ROOTFS)/.done
