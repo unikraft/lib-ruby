@@ -39,6 +39,7 @@
 # Library registration
 ################################################################################
 $(eval $(call addlib_s,libruby,$(CONFIG_LIBRUBY)))
+$(eval $(call addlib_s,libruby_ext,$(CONFIG_LIBRUBY_EXT)))
 
 ################################################################################
 # Sources
@@ -183,7 +184,283 @@ LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/enc/trans/newline.c
 LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/./missing/setproctitle.c
 LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/addr2line.c
 
+################################################################################
+# Extensions
+################################################################################
+LIBRUBY_EXT_CFLAGS-y += $(LIBRUBY_CINCLUDES-y)
+LIBRUBY_EXT_CFLAGS-y += $(LIBRUBY_SUPPRESS_FLAGS)
+LIBRUBY_EXT_CFLAGS-y += -DRUBY_EXTCONF_H=\"extconf.h\"
+
+ifeq ($(CONFIG_LIBRUBY_MINI),y)
 LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/dmyext.c
+else
+LIBRUBY_SRCS-y += $(LIBRUBY_BASE)/generated/ext/extinit.c
+endif
+
+ifeq ($(CONFIG_LIBRUBY_EXT_STRSCAN),y)
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/strscan/strscan.c
+LIBRUBY_EXT_STRSCAN_FLAGS-y += -I$(LIBRUBY_SRC)/ext/strscan
+endif
+ifeq ($(CONFIG_LIBRUBY_EXT_SYSLOG),y)
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/syslog/syslog.c
+LIBRUBY_EXT_SYSLOG_FLAGS-y += -I$(LIBRUBY_SRC)/ext/syslog
+endif
+ifeq ($(CONFIG_LIBRUBY_EXT_JSON),y)
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/json/generator/generator.c
+LIBRUBY_EXT_GENERATOR_FLAGS-y += -I$(LIBRUBY_SRC)/ext/json/generator
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/json/parser/parser.c|json
+LIBRUBY_EXT_PARSER_FLAGS-y += -I$(LIBRUBY_SRC)/ext/json/parser
+endif
+ifeq ($(CONFIG_LIBRUBY_EXT_RBCONFIG_SIZEOF),y)
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/rbconfig/sizeof/sizes.c
+LIBRUBY_EXT_SIZES_FLAGS-y += -I$(LIBRUBY_SRC)/ext/rbconfig/sizeof
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/rbconfig/sizeof/limits.c
+LIBRUBY_EXT_LIMITS_FLAGS-y += -I$(LIBRUBY_SRC)/ext/rbconfig/sizeof
+endif
+ifeq ($(CONFIG_LIBRUBY_EXT_BIGDECIMAL),y)
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/bigdecimal/bigdecimal.c
+LIBRUBY_EXT_BIGDECIMAL_FLAGS-y += -I$(LIBRUBY_SRC)/ext/bigdecimal
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/bigdecimal/util/util.c
+LIBRUBY_EXT_UTIL_FLAGS-y += -I$(LIBRUBY_SRC)/ext/bigdecimal/util
+endif
+ifeq ($(CONFIG_LIBRUBY_EXT_RACC_CPARSE),y)
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/racc/cparse/cparse.c
+LIBRUBY_EXT_CPARSE_FLAGS-y += -I$(LIBRUBY_SRC)/ext/racc/cparse
+endif
+ifeq ($(CONFIG_LIBRUBY_EXT_DIGEST),y)
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/digest/digest.c
+LIBRUBY_EXT_DIGEST_FLAGS-y += -I$(LIBRUBY_SRC)/ext/digest
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/digest/bubblebabble/bubblebabble.c
+LIBRUBY_EXT_BUBBLEBABBLE_FLAGS-y += -I$(LIBRUBY_SRC)/ext/digest/bubblebabble
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/digest/md5/md5init.c
+LIBRUBY_EXT_MD5INIT_FLAGS-y += -I$(LIBRUBY_SRC)/ext/digest/md5
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/digest/rmd160/rmd160init.c
+LIBRUBY_EXT_RMD160INIT_FLAGS-y += -I$(LIBRUBY_SRC)/ext/digest/rmd160
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/digest/sha1/sha1init.c
+LIBRUBY_EXT_SHA1INIT_FLAGS-y += -I$(LIBRUBY_SRC)/ext/digest/sha1
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/digest/sha2/sha2init.c
+LIBRUBY_EXT_SHA2INIT_FLAGS-y += -I$(LIBRUBY_SRC)/ext/digest/sha2
+endif
+ifeq ($(CONFIG_LIBRUBY_EXT_PSYCH),y)
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/psych/psych_to_ruby.c
+LIBRUBY_EXT_PSYCH_TO_RUBY_FLAGS-y += -I$(LIBRUBY_SRC)/ext/psych -I$(LIBRUBY_SRC)/ext/psych/yaml
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/psych/psych_yaml_tree.c
+LIBRUBY_EXT_PSYCH_YAML_TREE_FLAGS-y += -I$(LIBRUBY_SRC)/ext/psych -I$(LIBRUBY_SRC)/ext/psych/yaml
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/psych/psych_emitter.c
+LIBRUBY_EXT_PSYCH_EMITTER_FLAGS-y += -I$(LIBRUBY_SRC)/ext/psych -I$(LIBRUBY_SRC)/ext/psych/yaml
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/psych/psych_parser.c|psych
+LIBRUBY_EXT_PSYCH_PARSER_FLAGS-y += -I$(LIBRUBY_SRC)/ext/psych -I$(LIBRUBY_SRC)/ext/psych/yaml
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/psych/psych.c
+LIBRUBY_EXT_PSYCH_FLAGS-y += -I$(LIBRUBY_SRC)/ext/psych -I$(LIBRUBY_SRC)/ext/psych/yaml
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/psych/yaml/dumper.c
+LIBRUBY_EXT_DUMPER_FLAGS-y += -I$(LIBRUBY_SRC)/ext/psych -I$(LIBRUBY_SRC)/ext/psych/yaml
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/psych/yaml/parser.c|yaml
+LIBRUBY_EXT_PARSER_FLAGS-y += -I$(LIBRUBY_SRC)/ext/psych -I$(LIBRUBY_SRC)/ext/psych/yaml
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/psych/yaml/scanner.c
+LIBRUBY_EXT_SCANNER_FLAGS-y += -I$(LIBRUBY_SRC)/ext/psych -I$(LIBRUBY_SRC)/ext/psych/yaml
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/psych/yaml/api.c
+LIBRUBY_EXT_API_FLAGS-y += -I$(LIBRUBY_SRC)/ext/psych -I$(LIBRUBY_SRC)/ext/psych/yaml
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/psych/yaml/loader.c
+LIBRUBY_EXT_LOADER_FLAGS-y += -I$(LIBRUBY_SRC)/ext/psych -I$(LIBRUBY_SRC)/ext/psych/yaml
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/psych/yaml/writer.c
+LIBRUBY_EXT_WRITER_FLAGS-y += -I$(LIBRUBY_SRC)/ext/psych -I$(LIBRUBY_SRC)/ext/psych/yaml
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/psych/yaml/emitter.c
+LIBRUBY_EXT_EMITTER_FLAGS-y += -I$(LIBRUBY_SRC)/ext/psych -I$(LIBRUBY_SRC)/ext/psych/yaml
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/psych/yaml/reader.c
+LIBRUBY_EXT_READER_FLAGS-y += -I$(LIBRUBY_SRC)/ext/psych -I$(LIBRUBY_SRC)/ext/psych/yaml
+endif
+ifeq ($(CONFIG_LIBRUBY_EXT_CGI_ESCAPE),y)
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/cgi/escape/escape.c
+LIBRUBY_EXT_ESCAPE_FLAGS-y += -I$(LIBRUBY_SRC)/ext/cgi/escape
+endif
+ifeq ($(CONFIG_LIBRUBY_EXT_FCNTL),y)
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/fcntl/fcntl.c
+LIBRUBY_EXT_FCNTL_FLAGS-y += -I$(LIBRUBY_SRC)/ext/fcntl
+endif
+ifeq ($(CONFIG_LIBRUBY_EXT_SOCKET),y)
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/socket/init.c|socket
+LIBRUBY_EXT_INIT_FLAGS-y += -I$(LIBRUBY_BASE)/generated/ext/socket
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/socket/constants.c
+LIBRUBY_EXT_CONSTANTS_FLAGS-y += -I$(LIBRUBY_BASE)/generated/ext/socket
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/socket/basicsocket.c
+LIBRUBY_EXT_BASICSOCKET_FLAGS-y += -I$(LIBRUBY_BASE)/generated/ext/socket
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/socket/socket.c
+LIBRUBY_EXT_SOCKET_FLAGS-y += -I$(LIBRUBY_BASE)/generated/ext/socket
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/socket/ipsocket.c
+LIBRUBY_EXT_IPSOCKET_FLAGS-y += -I$(LIBRUBY_BASE)/generated/ext/socket
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/socket/tcpsocket.c
+LIBRUBY_EXT_TCPSOCKET_FLAGS-y += -I$(LIBRUBY_BASE)/generated/ext/socket
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/socket/tcpserver.c
+LIBRUBY_EXT_TCPSERVER_FLAGS-y += -I$(LIBRUBY_BASE)/generated/ext/socket
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/socket/sockssocket.c
+LIBRUBY_EXT_SOCKSSOCKET_FLAGS-y += -I$(LIBRUBY_BASE)/generated/ext/socket
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/socket/udpsocket.c
+LIBRUBY_EXT_UDPSOCKET_FLAGS-y += -I$(LIBRUBY_BASE)/generated/ext/socket
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/socket/unixsocket.c
+LIBRUBY_EXT_UNIXSOCKET_FLAGS-y += -I$(LIBRUBY_BASE)/generated/ext/socket
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/socket/unixserver.c
+LIBRUBY_EXT_UNIXSERVER_FLAGS-y += -I$(LIBRUBY_BASE)/generated/ext/socket
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/socket/option.c
+LIBRUBY_EXT_OPTION_FLAGS-y += -I$(LIBRUBY_BASE)/generated/ext/socket
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/socket/ancdata.c
+LIBRUBY_EXT_ANCDATA_FLAGS-y += -I$(LIBRUBY_BASE)/generated/ext/socket
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/socket/raddrinfo.c
+LIBRUBY_EXT_RADDRINFO_FLAGS-y += -I$(LIBRUBY_BASE)/generated/ext/socket
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/socket/ifaddr.c
+LIBRUBY_EXT_IFADDR_FLAGS-y += -I$(LIBRUBY_BASE)/generated/ext/socket
+endif
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/ext/pathname/pathname.c
+LIBRUBY_PATHNAME_FLAGS-y += -I$(LIBRUBY_SRC)/ext/pathname
+ifeq ($(CONFIG_LIBRUBY_EXT_DATE_CORE),y)
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/date/date_core.c
+LIBRUBY_EXT_DATE_CORE_FLAGS-y += -I$(LIBRUBY_SRC)/ext/date
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/date/date_parse.c
+LIBRUBY_EXT_DATE_PARSE_FLAGS-y += -I$(LIBRUBY_SRC)/ext/date
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/date/date_strftime.c
+LIBRUBY_EXT_DATE_STRFTIME_FLAGS-y += -I$(LIBRUBY_SRC)/ext/date
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/date/date_strptime.c
+LIBRUBY_EXT_DATE_STRPTIME_FLAGS-y += -I$(LIBRUBY_SRC)/ext/date
+endif
+ifeq ($(CONFIG_LIBRUBY_EXT_PTY),y)
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/pty/pty.c
+LIBRUBY_EXT_PTY_FLAGS-y += -I$(LIBRUBY_SRC)/ext/pty
+endif
+ifeq ($(CONFIG_LIBRUBY_EXT_OPENSSL),y)
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/openssl/openssl_missing.c
+LIBRUBY_EXT_OPENSSL_MISSING_FLAGS-y += -I$(LIBRUBY_SRC)/ext/openssl
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/openssl/ossl.c
+LIBRUBY_EXT_OSSL_FLAGS-y += -I$(LIBRUBY_SRC)/ext/openssl
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/openssl/ossl_asn1.c
+LIBRUBY_EXT_OSSL_ASN1_FLAGS-y += -I$(LIBRUBY_SRC)/ext/openssl
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/openssl/ossl_bio.c
+LIBRUBY_EXT_OSSL_BIO_FLAGS-y += -I$(LIBRUBY_SRC)/ext/openssl
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/openssl/ossl_bn.c
+LIBRUBY_EXT_OSSL_BN_FLAGS-y += -I$(LIBRUBY_SRC)/ext/openssl
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/openssl/ossl_cipher.c
+LIBRUBY_EXT_OSSL_CIPHER_FLAGS-y += -I$(LIBRUBY_SRC)/ext/openssl
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/openssl/ossl_config.c
+LIBRUBY_EXT_OSSL_CONFIG_FLAGS-y += -I$(LIBRUBY_SRC)/ext/openssl
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/openssl/ossl_digest.c
+LIBRUBY_EXT_OSSL_DIGEST_FLAGS-y += -I$(LIBRUBY_SRC)/ext/openssl
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/openssl/ossl_engine.c
+LIBRUBY_EXT_OSSL_ENGINE_FLAGS-y += -I$(LIBRUBY_SRC)/ext/openssl
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/openssl/ossl_hmac.c
+LIBRUBY_EXT_OSSL_HMAC_FLAGS-y += -I$(LIBRUBY_SRC)/ext/openssl
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/openssl/ossl_kdf.c
+LIBRUBY_EXT_OSSL_KDF_FLAGS-y += -I$(LIBRUBY_SRC)/ext/openssl
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/openssl/ossl_ns_spki.c
+LIBRUBY_EXT_OSSL_NS_SPKI_FLAGS-y += -I$(LIBRUBY_SRC)/ext/openssl
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/openssl/ossl_ocsp.c
+LIBRUBY_EXT_OSSL_OCSP_FLAGS-y += -I$(LIBRUBY_SRC)/ext/openssl
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/openssl/ossl_pkcs12.c
+LIBRUBY_EXT_OSSL_PKCS12_FLAGS-y += -I$(LIBRUBY_SRC)/ext/openssl
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/openssl/ossl_pkcs7.c
+LIBRUBY_EXT_OSSL_PKCS7_FLAGS-y += -I$(LIBRUBY_SRC)/ext/openssl
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/openssl/ossl_pkey.c
+LIBRUBY_EXT_OSSL_PKEY_FLAGS-y += -I$(LIBRUBY_SRC)/ext/openssl
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/openssl/ossl_pkey_dh.c
+LIBRUBY_EXT_OSSL_PKEY_DH_FLAGS-y += -I$(LIBRUBY_SRC)/ext/openssl
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/openssl/ossl_pkey_dsa.c
+LIBRUBY_EXT_OSSL_PKEY_DSA_FLAGS-y += -I$(LIBRUBY_SRC)/ext/openssl
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/openssl/ossl_pkey_ec.c
+LIBRUBY_EXT_OSSL_PKEY_EC_FLAGS-y += -I$(LIBRUBY_SRC)/ext/openssl
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/openssl/ossl_pkey_rsa.c
+LIBRUBY_EXT_OSSL_PKEY_RSA_FLAGS-y += -I$(LIBRUBY_SRC)/ext/openssl
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/openssl/ossl_rand.c
+LIBRUBY_EXT_OSSL_RAND_FLAGS-y += -I$(LIBRUBY_SRC)/ext/openssl
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/openssl/ossl_ssl.c
+LIBRUBY_EXT_OSSL_SSL_FLAGS-y += -I$(LIBRUBY_SRC)/ext/openssl
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/openssl/ossl_ssl_session.c
+LIBRUBY_EXT_OSSL_SSL_SESSION_FLAGS-y += -I$(LIBRUBY_SRC)/ext/openssl
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/openssl/ossl_x509.c
+LIBRUBY_EXT_OSSL_X509_FLAGS-y += -I$(LIBRUBY_SRC)/ext/openssl
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/openssl/ossl_x509attr.c
+LIBRUBY_EXT_OSSL_X509ATTR_FLAGS-y += -I$(LIBRUBY_SRC)/ext/openssl
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/openssl/ossl_x509cert.c
+LIBRUBY_EXT_OSSL_X509CERT_FLAGS-y += -I$(LIBRUBY_SRC)/ext/openssl
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/openssl/ossl_x509crl.c
+LIBRUBY_EXT_OSSL_X509CRL_FLAGS-y += -I$(LIBRUBY_SRC)/ext/openssl
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/openssl/ossl_x509ext.c
+LIBRUBY_EXT_OSSL_X509EXT_FLAGS-y += -I$(LIBRUBY_SRC)/ext/openssl
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/openssl/ossl_x509name.c
+LIBRUBY_EXT_OSSL_X509NAME_FLAGS-y += -I$(LIBRUBY_SRC)/ext/openssl
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/openssl/ossl_x509req.c
+LIBRUBY_EXT_OSSL_X509REQ_FLAGS-y += -I$(LIBRUBY_SRC)/ext/openssl
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/openssl/ossl_x509revoked.c
+LIBRUBY_EXT_OSSL_X509REVOKED_FLAGS-y += -I$(LIBRUBY_SRC)/ext/openssl
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/openssl/ossl_x509store.c
+LIBRUBY_EXT_OSSL_X509STORE_FLAGS-y += -I$(LIBRUBY_SRC)/ext/openssl
+endif
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/ext/stringio/stringio.c
+LIBRUBY_STRINGIO_FLAGS-y += -I$(LIBRUBY_SRC)/ext/stringio
+ifeq ($(CONFIG_LIBRUBY_EXT_FIBER),y)
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/fiber/fiber.c
+LIBRUBY_EXT_FIBER_FLAGS-y += -I$(LIBRUBY_SRC)/ext/fiber
+endif
+ifeq ($(CONFIG_LIBRUBY_EXT_FIDDLE),y)
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/fiddle/closure.c
+LIBRUBY_EXT_CLOSURE_FLAGS-y += -I$(LIBRUBY_SRC)/ext/fiddle
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/fiddle/conversions.c
+LIBRUBY_EXT_CONVERSIONS_FLAGS-y += -I$(LIBRUBY_SRC)/ext/fiddle
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/fiddle/fiddle.c
+LIBRUBY_EXT_FIDDLE_FLAGS-y += -I$(LIBRUBY_SRC)/ext/fiddle
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/fiddle/function.c
+LIBRUBY_EXT_FUNCTION_FLAGS-y += -I$(LIBRUBY_SRC)/ext/fiddle
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/fiddle/handle.c
+LIBRUBY_EXT_HANDLE_FLAGS-y += -I$(LIBRUBY_SRC)/ext/fiddle
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/fiddle/pointer.c
+LIBRUBY_EXT_POINTER_FLAGS-y += -I$(LIBRUBY_SRC)/ext/fiddle
+endif
+ifeq ($(CONFIG_LIBRUBY_EXT_ETC),y)
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/etc/etc.c
+LIBRUBY_EXT_ETC_FLAGS-y += -I$(LIBRUBY_SRC)/ext/etc
+endif
+ifeq ($(CONFIG_LIBRUBY_EXT_CONTINUATION),y)
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/continuation/continuation.c
+LIBRUBY_EXT_CONTINUATION_FLAGS-y += -I$(LIBRUBY_SRC)/ext/continuation
+endif
+ifeq ($(CONFIG_LIBRUBY_EXT_OBJSPACE),y)
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/objspace/object_tracing.c
+LIBRUBY_EXT_OBJECT_TRACING_FLAGS-y += -I$(LIBRUBY_SRC)/ext/objspace
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/objspace/objspace.c
+LIBRUBY_EXT_OBJSPACE_FLAGS-y += -I$(LIBRUBY_SRC)/ext/objspace
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/objspace/objspace_dump.c
+LIBRUBY_EXT_OBJSPACE_DUMP_FLAGS-y += -I$(LIBRUBY_SRC)/ext/objspace
+endif
+ifeq ($(CONFIG_LIBRUBY_EXT_COVERAGE),y)
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/coverage/coverage.c
+LIBRUBY_EXT_COVERAGE_FLAGS-y += -I$(LIBRUBY_SRC)/ext/coverage
+endif
+ifeq ($(CONFIG_LIBRUBY_EXT_IO_CONSOLE),y)
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/io/console/console.c
+LIBRUBY_EXT_CONSOLE_FLAGS-y += -I$(LIBRUBY_SRC)/ext/io/console
+endif
+ifeq ($(CONFIG_LIBRUBY_EXT_IO_NONBLOCK),y)
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/io/nonblock/nonblock.c
+LIBRUBY_EXT_NONBLOCK_FLAGS-y += -I$(LIBRUBY_SRC)/ext/io/nonblock
+endif
+ifeq ($(CONFIG_LIBRUBY_EXT_IO_WAIT),y)
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/io/wait/wait.c
+LIBRUBY_EXT_WAIT_FLAGS-y += -I$(LIBRUBY_SRC)/ext/io/wait
+endif
+ifeq ($(CONFIG_LIBRUBY_EXT_RIPPER),y)
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/ripper/ripper.c
+LIBRUBY_EXT_RIPPER_FLAGS-y += -I$(LIBRUBY_SRC)/ext/ripper
+endif
+ifeq ($(CONFIG_LIBRUBY_EXT_NKF),y)
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/nkf/nkf.c
+LIBRUBY_EXT_NKF_FLAGS-y += -I$(LIBRUBY_SRC)/ext/nkf
+endif
+ifeq ($(CONFIG_LIBRUBY_EXT_ZLIB),y)
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/zlib/zlib.c
+LIBRUBY_EXT_ZLIB_FLAGS-y += -I$(LIBRUBY_SRC)/ext/zlib
+endif
+ifeq ($(CONFIG_LIBRUBY_EXT_SDBM),y)
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/sdbm/_sdbm.c
+LIBRUBY_EXT__SDBM_FLAGS-y += -I$(LIBRUBY_SRC)/ext/sdbm
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/sdbm/init.c|sdbm
+LIBRUBY_EXT_INIT_FLAGS-y += -I$(LIBRUBY_SRC)/ext/sdbm
+endif
 
 ifneq ($(CONFIG_LIBRUBY_MINI),y)
 # Init_enc() is also in miniinit.c

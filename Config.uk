@@ -21,4 +21,105 @@ if LIBRUBY
 config LIBRUBY_MINI
 	bool "Mini configuration"
 	default n
+
+config LIBRUBY_EXT
+	bool "Enable extensions"
+	depends on !LIBRUBY_MINI
+	default y
+
+	if LIBRUBY_EXT
+	config LIBRUBY_EXT_STRSCAN
+		bool "strscan"
+		default y
+	config LIBRUBY_EXT_SYSLOG
+		bool "syslog"
+		default y
+	config LIBRUBY_EXT_JSON
+		bool "json"
+		default y
+	config LIBRUBY_EXT_RBCONFIG_SIZEOF
+		bool "rbconfig/sizeof"
+		default y
+	config LIBRUBY_EXT_BIGDECIMAL
+		bool "bigdecimal"
+		default y
+	config LIBRUBY_EXT_RACC_CPARSE
+		bool "racc/cparse"
+		default y
+	config LIBRUBY_EXT_PSYCH
+		bool "psych"
+		default y
+	if LIBSSL
+	config LIBRUBY_EXT_DIGEST
+		bool "digest"
+		default y
+	endif
+	config LIBRUBY_EXT_CGI_ESCAPE
+		bool "cgi/escape"
+		default y
+	config LIBRUBY_EXT_FCNTL
+		bool "fcntl"
+		default y
+	config LIBRUBY_EXT_SOCKET
+		bool "socket"
+		select LWIP_IPV6
+		select LWIP_IGMP
+		default y
+	config LIBRUBY_EXT_DATE_CORE
+		bool "date_core"
+		default y
+	config LIBRUBY_EXT_PTY
+		bool "pty"
+		default n
+	if LIBSSL
+	config LIBRUBY_EXT_OPENSSL
+		bool "openssl"
+		default y
+	endif
+	config LIBRUBY_EXT_FIBER
+		bool "fiber"
+		default y
+	if LIBFFI
+	config LIBRUBY_EXT_FIDDLE
+		bool "fiddle"
+		default y
+	endif
+	config LIBRUBY_EXT_ETC
+		bool "etc"
+		default y
+	config LIBRUBY_EXT_CONTINUATION
+		bool "continuation"
+		default y
+	config LIBRUBY_EXT_OBJSPACE
+		bool "objspace"
+		default y
+	config LIBRUBY_EXT_COVERAGE
+		bool "coverage"
+		default y
+	config LIBRUBY_EXT_IO_CONSOLE
+		bool "io/console"
+		default n
+	config LIBRUBY_EXT_IO_NONBLOCK
+		bool "io/nonblock"
+		default y
+	config LIBRUBY_EXT_IO_WAIT
+		bool "io/wait"
+		default y
+	if LIBRUBY_TEST
+	config LIBRUBY_EXT_RIPPER
+		bool "ripper"
+		default y
+	endif
+	config LIBRUBY_EXT_NKF
+		bool "nkf"
+		default y
+	if LIBZLIB
+	config LIBRUBY_EXT_ZLIB
+		bool "zlib"
+		default y
+	endif
+	config LIBRUBY_EXT_SDBM
+		bool "sdbm"
+		default y
+	endif
 endif

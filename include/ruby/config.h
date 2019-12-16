@@ -422,6 +422,7 @@
 /* #define HAVE_VALGRIND_MEMCHECK_H 1 */
 #define DLEXT_MAXLEN 3
 #define DLEXT ".so"
+#define EXTSTATIC 1
 #define HAVE__SETJMP 1
 #define RUBY_SETJMP(env) __builtin_setjmp((env))
 #define RUBY_LONGJMP(env,val) __builtin_longjmp((env),val)
