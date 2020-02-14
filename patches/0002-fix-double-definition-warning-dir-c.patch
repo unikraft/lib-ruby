@@ -1,0 +1,24 @@
+--- a/dir.c.orig	2020-02-14 13:17:05.146913259 +0100
++++ b/dir.c	2020-02-14 13:17:17.010776446 +0100
+@@ -24,10 +24,6 @@
+ #include <unistd.h>
+ #endif
+ 
+-#ifndef O_CLOEXEC
+-#  define O_CLOEXEC 0
+-#endif
+-
+ #ifndef USE_OPENDIR_AT
+ # if defined(HAVE_FDOPENDIR) && defined(HAVE_DIRFD) && \
+     defined(HAVE_OPENAT) && defined(HAVE_FSTATAT)
+@@ -43,6 +39,10 @@
+ # define AT_FDCWD -1
+ #endif
+ 
++#ifndef O_CLOEXEC
++#  define O_CLOEXEC 0
++#endif
++
+ #undef HAVE_DIRENT_NAMLEN
+ #if defined HAVE_DIRENT_H && !defined _WIN32
+ # include <dirent.h>
