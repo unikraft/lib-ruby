@@ -7,7 +7,7 @@ menuconfig LIBRUBY
 	select LIBVFSCORE
 	select LIBSYSCALL_SHIM
 	select LIBUKMMAP
-	select UKSYSINFO
+	select LIBPOSIX_SYSINFO
 	select LIBPOSIX_LIBDL
 	select LIBNEWLIBC
 	select LIBCOMPILER_RT
@@ -16,6 +16,7 @@ menuconfig LIBRUBY
 	select CXX_THREADS
 	select LIBPTHREAD_EMBEDDED
 	select LIBLWIP
+	select LWIP_SOCKET
 
 if LIBRUBY
 config LIBRUBY_MINI
