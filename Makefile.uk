@@ -74,6 +74,13 @@ LIBRUBY_SUPRESS_CXXFLAGS-y += $(LIBRUBY_SUPPRESS_FLAGS-y)
 LIBRUBY_CFLAGS-y           += $(LIBRUBY_SUPRESS_CFLAGS-y)
 LIBRUBY_CXXFLAGS-y         += $(LIBRUBY_SUPRESS_CXXFLAGS-y)
 
+CFLAGS-$(CONFIG_LIBRUBY)   += -fno-gcse -fno-gnu-unique \
+                  -fno-move-loop-invariants
+CXXFLAGS-$(CONFIG_LIBRUBY) += -fno-gcse -fno-gnu-unique \
+                  -fno-move-loop-invariants
+GOFLAGS-$(CONFIG_LIBRUBY)  += -fno-gcse -fno-gnu-unique \
+                  -fno-move-loop-invariants
+
 ################################################################################
 # Helpers
 ################################################################################
