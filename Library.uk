@@ -1,0 +1,6 @@
+name        := "ruby"
+description := "An interpreted object-oriented programming language often used for web development."
+gitrepo     := "https://github.com/ruby/ruby.git"
+homepage    := "https://www.ruby-lang.org/en/"
+license     := "BSD-2-Clause"
+version     := 2.6.0 sha256:9f64a71ad1efa20aed4451e798772893479ea00cb0a131777f2c9b71cc75df59 https://github.com/ruby/ruby/archive/ruby_2_6.tar.gz
