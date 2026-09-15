@@ -5,9 +5,8 @@ This is the port of Ruby for Unikraft as external library.
 Ruby depends on the following libraries, that need to be added to `Makefile` in
 this order:
 
-* `pthreads`, e.g. `pthread-embedded`
-* C++ libraries: `compiler-rt`, `libcxx`, `libcxxabi`, `libunwind`
-* `libc`, e.g. `newlib`
+* `libc`: `musl`, which also provides `pthreads`
+* `compiler-rt`
 * network stack, e.g. `lwip`
 * optional extensions: `openssl`, `zlib`.
 

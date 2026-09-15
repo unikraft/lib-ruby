@@ -9,12 +9,8 @@ menuconfig LIBRUBY
 	select LIBUKMMAP
 	select LIBPOSIX_SYSINFO
 	select LIBPOSIX_LIBDL
-	select LIBNEWLIBC
+	imply LIBMUSL
 	select LIBCOMPILER_RT
-	select LIBUNWIND
-	select LIBCXX
-	select CXX_THREADS
-	select LIBPTHREAD_EMBEDDED
 	select LIBLWIP
 	select LWIP_SOCKET
 
@@ -42,23 +38,11 @@ config LIBRUBY_EXT
 	config LIBRUBY_EXT_STRSCAN
 		bool "strscan"
 		default y
-	config LIBRUBY_EXT_SYSLOG
-		bool "syslog"
-		default y
 	config LIBRUBY_EXT_JSON
 		bool "json"
 		default y
 	config LIBRUBY_EXT_RBCONFIG_SIZEOF
 		bool "rbconfig/sizeof"
-		default y
-	config LIBRUBY_EXT_BIGDECIMAL
-		bool "bigdecimal"
-		default y
-	config LIBRUBY_EXT_RACC_CPARSE
-		bool "racc/cparse"
-		default y
-	config LIBRUBY_EXT_PSYCH
-		bool "psych"
 		default y
 	if LIBSSL
 	config LIBRUBY_EXT_DIGEST
@@ -87,14 +71,12 @@ config LIBRUBY_EXT
 		bool "openssl"
 		default y
 	endif
-	config LIBRUBY_EXT_FIBER
-		bool "fiber"
+	config LIBRUBY_EXT_MONITOR
+		bool "monitor"
 		default y
-	if LIBFFI
-	config LIBRUBY_EXT_FIDDLE
-		bool "fiddle"
-		default y
-	endif
+		help
+		  Required by RubyGems, which Ruby loads at startup unless
+		  run with --disable-gems.
 	config LIBRUBY_EXT_ETC
 		bool "etc"
 		default y
@@ -121,17 +103,11 @@ config LIBRUBY_EXT
 		bool "ripper"
 		default y
 	endif
-	config LIBRUBY_EXT_NKF
-		bool "nkf"
-		default y
 	if LIBZLIB
 	config LIBRUBY_EXT_ZLIB
 		bool "zlib"
 		default y
 	endif
-	config LIBRUBY_EXT_SDBM
-		bool "sdbm"
-		default y
 	endif
 
 config LIBRUBY_ENC
@@ -144,6 +120,10 @@ config LIBRUBY_TEST
 	depends on !LIBRUBY_MINI
 	depends on LIBRUBY_EXT
 	depends on LIBRUBY_ENC
-	default y
+	default n
+	help
+	  Build the Ruby unit test suite into the image. This is a developer
+	  option: the test suite is unstable, some of the tests block, and it
+	  requires a considerably larger stack and heap.
 
 endif

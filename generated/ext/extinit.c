@@ -13,36 +13,23 @@ void Init_ext(void)
 #if CONFIG_LIBRUBY_EXT_STRSCAN
     init(Init_strscan, "strscan");
 #endif
-#if CONFIG_LIBRUBY_EXT_SYSLOG
-    init(Init_syslog, "syslog");
-#endif
 #if CONFIG_LIBRUBY_EXT_JSON
-    init(Init_generator, "json/ext/generator");
-    init(Init_parser, "json/ext/parser");
+    init(Init_json_ext_generator, "json/ext/generator");
+    init(Init_json_ext_parser, "json/ext/parser");
 #endif
 #if CONFIG_LIBRUBY_EXT_RBCONFIG_SIZEOF
-    init(Init_sizeof, "rbconfig/sizeof");
-#endif
-#if CONFIG_LIBRUBY_EXT_BIGDECIMAL
-    init(Init_bigdecimal, "bigdecimal");
-    init(Init_util, "bigdecimal/util");
-#endif
-#if CONFIG_LIBRUBY_EXT_RACC_CPARSE
-    init(Init_cparse, "racc/cparse");
+    init(Init_rbconfig_sizeof, "rbconfig/sizeof");
 #endif
 #if CONFIG_LIBRUBY_EXT_DIGEST
     init(Init_digest, "digest");
-    init(Init_bubblebabble, "digest/bubblebabble");
-    init(Init_md5, "digest/md5");
-    init(Init_rmd160, "digest/rmd160");
-    init(Init_sha1, "digest/sha1");
-    init(Init_sha2, "digest/sha2");
-#endif
-#if CONFIG_LIBRUBY_EXT_PSYCH
-    init(Init_psych, "psych");
+    init(Init_digest_bubblebabble, "digest/bubblebabble");
+    init(Init_digest_md5, "digest/md5");
+    init(Init_digest_rmd160, "digest/rmd160");
+    init(Init_digest_sha1, "digest/sha1");
+    init(Init_digest_sha2, "digest/sha2");
 #endif
 #if CONFIG_LIBRUBY_EXT_CGI_ESCAPE
-    init(Init_escape, "cgi/escape");
+    init(Init_cgi_escape, "cgi/escape");
 #endif
 #if CONFIG_LIBRUBY_EXT_FCNTL
     init(Init_fcntl, "fcntl");
@@ -61,11 +48,8 @@ void Init_ext(void)
 #if CONFIG_LIBRUBY_EXT_OPENSSL
     init(Init_openssl, "openssl");
 #endif
-#if CONFIG_LIBRUBY_EXT_FIBER
-    init(Init_fiber, "fiber");
-#endif
-#if CONFIG_LIBRUBY_EXT_FIDDLE
-    init(Init_fiddle, "fiddle");
+#if CONFIG_LIBRUBY_EXT_MONITOR
+    init(Init_monitor, "monitor");
 #endif
 #if CONFIG_LIBRUBY_EXT_ETC
     init(Init_etc, "etc");
@@ -80,25 +64,19 @@ void Init_ext(void)
     init(Init_coverage, "coverage");
 #endif
 #if CONFIG_LIBRUBY_EXT_IO_CONSOLE
-    init(Init_console, "io/console");
+    init(Init_io_console, "io/console");
 #endif
 #if CONFIG_LIBRUBY_EXT_IO_NONBLOCK
-    init(Init_nonblock, "io/nonblock");
+    init(Init_io_nonblock, "io/nonblock");
 #endif
 #if CONFIG_LIBRUBY_EXT_IO_WAIT
-    init(Init_wait, "io/wait");
+    init(Init_io_wait, "io/wait");
 #endif
 #if CONFIG_LIBRUBY_EXT_RIPPER
     init(Init_ripper, "ripper");
 #endif
-#if CONFIG_LIBRUBY_EXT_NKF
-    init(Init_nkf, "nkf");
-#endif
 #if CONFIG_LIBRUBY_EXT_ZLIB
     init(Init_zlib, "zlib");
-#endif
-#if CONFIG_LIBRUBY_EXT_SDBM
-    init(Init_sdbm, "sdbm");
 #endif
 
 #if CONFIG_LIBRUBY_TEST

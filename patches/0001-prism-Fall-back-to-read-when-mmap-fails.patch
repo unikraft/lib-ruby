@@ -1,0 +1,28 @@
+From: Lupsa Alexandra <alexandra.lupsa1103@stud.acs.upb.ro>
+Subject: [PATCH] prism: Fall back to read() when mmap() fails
+
+pm_read_file() maps the source file with mmap() whenever
+_POSIX_MAPPED_FILES is defined, and turns a failed mapping into a load
+error. musl defines _POSIX_MAPPED_FILES, but Unikraft's ukmmap only
+provides anonymous mappings and fails for any file descriptor, so every
+Ruby file failed to load.
+
+Fall back to pm_string_file_init(), which reads the file into memory.
+
+Signed-off-by: Lupsa Alexandra <alexandra.lupsa1103@stud.acs.upb.ro>
+---
+diff --git a/prism_compile.c b/prism_compile.c
+--- a/prism_compile.c
++++ b/prism_compile.c
+@@ -11352,8 +11352,10 @@
+ 
+     source = mmap(NULL, size, PROT_READ, MAP_PRIVATE, fd, 0);
+     if (source == MAP_FAILED) {
++        // Not every platform that defines _POSIX_MAPPED_FILES can map
++        // regular files. Fall back to reading the file into memory.
+         close(fd);
+-        return PM_STRING_INIT_ERROR_GENERIC;
++        return pm_string_file_init(string, filepath);
+     }
+ 
+     close(fd);

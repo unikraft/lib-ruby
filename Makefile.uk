@@ -44,16 +44,23 @@ $(eval $(call addlib_s,libruby_test,$(CONFIG_LIBRUBY_TEST)))
 ################################################################################
 # Sources
 ################################################################################
-LIBRUBY_MAJOR=2
-LIBRUBY_MINOR=6
-LIBRUBY_REVISION=0
+LIBRUBY_MAJOR=4
+LIBRUBY_MINOR=0
+LIBRUBY_REVISION=6
 LIBRUBY_VERSION=$(LIBRUBY_MAJOR)_$(LIBRUBY_MINOR)
 LIBRUBY_VERSION_LONG=$(LIBRUBY_MAJOR).$(LIBRUBY_MINOR).$(LIBRUBY_REVISION)
-LIBRUBY_ARCHIVE=ruby_$(LIBRUBY_VERSION).zip
-LIBRUBY_URL=https://github.com/ruby/ruby/archive/$(LIBRUBY_ARCHIVE)
-LIBRUBY_DIR=ruby-ruby_$(LIBRUBY_VERSION)
+# Name of the standard library directories (lib/ruby/<ruby_version>), shared
+# by all releases of a MAJOR.MINOR series.
+LIBRUBY_RUBY_VERSION=$(LIBRUBY_MAJOR).$(LIBRUBY_MINOR).0
+# Use the official release tarball instead of the GitHub branch archive. The
+# GitHub archive ships neither the generated `configure` script nor the
+# `tool/config.guess` / `tool/config.sub` auxiliary files; the release tarball
+# ships all three, so no `autoconf` run is needed here.
+LIBRUBY_ARCHIVE=ruby-$(LIBRUBY_VERSION_LONG).tar.gz
+LIBRUBY_URL=https://cache.ruby-lang.org/pub/ruby/$(LIBRUBY_MAJOR).$(LIBRUBY_MINOR)/$(LIBRUBY_ARCHIVE)
+LIBRUBY_DIR=ruby-$(LIBRUBY_VERSION_LONG)
 LIBRUBY_PATCHDIR=$(LIBRUBY_BASE)/patches
-$(eval $(call fetch,libruby,$(LIBRUBY_URL),ruby_$(LIBRUBY_ARCHIVE)))
+$(eval $(call fetch,libruby,$(LIBRUBY_URL)))
 $(eval $(call patch,libruby,$(LIBRUBY_PATCHDIR),$(LIBRUBY_DIR)))
 
 ################################################################################
@@ -91,7 +98,8 @@ LIBRUBY_CINCLUDES-y += -I$(LIBRUBY_BASE)/include \
 	-I$(LIBRUBY_BASE)/generated \
 	-I$(LIBRUBY_SRC) \
 	-I$(LIBRUBY_SRC)/include \
-	-I$(LIBRUBY_SRC)/enc/unicode/12.1.0
+	-I$(LIBRUBY_SRC)/prism \
+	-I$(LIBRUBY_SRC)/enc/unicode/17.0.0
 
 ################################################################################
 # Core
@@ -101,9 +109,8 @@ LIBRUBY_CFLAGS-y += -std=gnu99 -D_FORTIFY_SOURCE=2 \
 	 -fno-strict-overflow -fvisibility=hidden -fexcess-precision=standard \
 	-DRUBY_EXPORT -DCANONICALIZATION_FOR_MATHN
 
-LIBRUBY_SRCS-y += $(LIBRUBY_BASE)/thread.c|unikraft
 LIBRUBY_SRCS-$(CONFIG_LIBRUBY_MAIN_FUNCTION) += $(LIBRUBY_BASE)/ruby_main_example.c|unikraft
-LIBRUBY_RUBY_MAIN_EXAMPLE_FLAGS-y = -DLIBRUBY_VERSION_LONG=\"$(LIBRUBY_VERSION_LONG)\"
+LIBRUBY_RUBY_MAIN_EXAMPLE_UNIKRAFT_FLAGS-y =-DLIBRUBY_RUBY_VERSION=\"$(LIBRUBY_RUBY_VERSION)\"
 
 ifeq ($(CONFIG_LIBRUBY_MINI),y)
 LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/dmydln.c
@@ -113,7 +120,10 @@ else
 LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/dln.c
 LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/localeinit.c
 LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/loadpath.c
-LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/prelude.c
+# Ruby 3.x replaced `prelude.c` with `builtin.c`, which #includes the
+# `builtin_binary.rbbin` blob produced by the host build (UK_PREPARE runs it
+# before anything here is compiled).
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/builtin.c
 endif
 
 LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/main.c
@@ -121,10 +131,12 @@ LIBRUBY_MAIN_FLAGS-y += -Dmain=ruby_main
 LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/array.c
 LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/ast.c
 LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/bignum.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/box.c
 LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/class.c
 LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/compar.c
 LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/compile.c
 LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/complex.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/concurrent_set.c
 LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/cont.c
 LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/debug.c
 LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/debug_counter.c
@@ -137,23 +149,33 @@ LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/error.c
 LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/eval.c
 LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/file.c
 LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/gc.c
+# Unikraft has no page tables yet, so keep the GC heap pages down to 4K. Ruby
+# defaults to 64K. `gc.c` textually includes `gc/default/default.c`, which
+# guards the knob with `#ifndef`, so a define on the command line is enough --
+# this replaces the patch that edited the constant in place.
+LIBRUBY_GC_FLAGS-y += -DHEAP_PAGE_ALIGN_LOG=12
 LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/hash.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/imemo.c
 LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/inits.c
 LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/io.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/io_buffer.c
 LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/iseq.c
 LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/load.c
 LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/marshal.c
 LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/math.c
-LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/mjit.c
-LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/mjit_compile.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/memory_view.c
 LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/node.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/node_dump.c
 LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/numeric.c
 LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/object.c
 LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/pack.c
 LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/parse.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/parser_st.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/pathname.c
 LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/proc.c
 LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/process.c
 LIBRUBY_PROCESS_FLAGS-y += -Wno-incompatible-pointer-types
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/ractor.c
 LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/random.c
 LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/range.c
 LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/rational.c
@@ -165,7 +187,10 @@ LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/regexec.c
 LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/regparse.c
 LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/regsyntax.c
 LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/ruby.c
-LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/safe.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/ruby_parser.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/scheduler.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/set.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/shape.c
 LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/signal.c
 LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/sprintf.c
 LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/st.c
@@ -177,27 +202,75 @@ LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/thread.c
 LIBRUBY_THREAD_FLAGS += -Wno-unused-function
 LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/time.c
 LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/transcode.c
-LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/transient_heap.c
 LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/util.c
 LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/variable.c
 LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/version.c
 LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/vm.c
 LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/vm_backtrace.c
 LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/vm_dump.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/vm_sync.c
 LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/vm_trace.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/weakmap.c
 LIBRUBY_SRCS-$(CONFIG_ARCH_X86_64) += $(LIBRUBY_SRC)/coroutine/amd64/Context.S
+# Ruby's own Makefile passes this when assembling coroutine sources; the symbol
+# prefix is empty on ELF.
+LIBRUBY_CONTEXT_FLAGS-y += "-DPREFIXED_SYMBOL(name)=name"
 LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/enc/ascii.c
 LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/enc/us_ascii.c
 LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/enc/unicode.c
-LIBRUBY_UNICODE_FLAGS-y += -I$(LIBRUBY_SRC)/enc/unicode/12.1.0/
+LIBRUBY_UNICODE_FLAGS-y += -I$(LIBRUBY_SRC)/enc/unicode/17.0.0/
 LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/enc/utf_8.c
 LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/enc/trans/newline.c
 LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/./missing/setproctitle.c
 LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/addr2line.c
 
 ################################################################################
+# Prism
+################################################################################
+# Ruby 3.4 replaced the hand-written parser with Prism, which upstream builds
+# as part of the core (PRISM_FILES in common.mk). The file list and its order
+# are taken from there; `prism_init.c` sits in the source root, the rest under
+# `prism/`.
+#
+# Object files are flattened by basename -- libruby is registered with
+# `addlib_s`, not `addlib_tree_s`, so `srcrelpath` falls back to `$(notdir)`.
+# Three Prism files collide with core files of the same name, so they carry the
+# `|prism` variant suffix, the same mechanism the two `parser.c` files use.
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/prism/api_node.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/prism/api_pack.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/prism/diagnostic.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/prism/encoding.c|prism
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/prism/extension.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/prism/node.c|prism
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/prism/options.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/prism/pack.c|prism
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/prism/prettyprint.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/prism/regexp.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/prism/serialize.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/prism/static_literals.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/prism/token_type.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/prism/util/pm_buffer.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/prism/util/pm_char.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/prism/util/pm_constant_pool.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/prism/util/pm_integer.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/prism/util/pm_list.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/prism/util/pm_memchr.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/prism/util/pm_newline_list.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/prism/util/pm_string.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/prism/util/pm_strncasecmp.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/prism/util/pm_strpbrk.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/prism/prism.c
+LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/prism_init.c
+
+################################################################################
 # Extensions
 ################################################################################
+# Eight extensions are gone from 4.0.6 and their options have been removed:
+# bigdecimal, fiddle, nkf and racc moved out of ext/ and ship as bundled gems
+# under gems/, which cannot be statically linked from here; sdbm, syslog and
+# fiber were removed outright; psych still exists but no longer vendors
+# libyaml, and there is no libyaml port in Unikraft to link against. psych can
+# come back if one appears.
 LIBRUBY_EXT_CFLAGS-y += $(LIBRUBY_CINCLUDES-y)
 LIBRUBY_EXT_CFLAGS-y += $(LIBRUBY_SUPPRESS_FLAGS-y)
 LIBRUBY_EXT_CFLAGS-y += -DRUBY_EXTCONF_H=\"extconf.h\"
@@ -212,31 +285,17 @@ ifeq ($(CONFIG_LIBRUBY_EXT_STRSCAN),y)
 LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/strscan/strscan.c
 LIBRUBY_EXT_STRSCAN_FLAGS-y += -I$(LIBRUBY_SRC)/ext/strscan
 endif
-ifeq ($(CONFIG_LIBRUBY_EXT_SYSLOG),y)
-LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/syslog/syslog.c
-LIBRUBY_EXT_SYSLOG_FLAGS-y += -I$(LIBRUBY_SRC)/ext/syslog
-endif
 ifeq ($(CONFIG_LIBRUBY_EXT_JSON),y)
 LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/json/generator/generator.c
-LIBRUBY_EXT_GENERATOR_FLAGS-y += -I$(LIBRUBY_SRC)/ext/json/generator
+LIBRUBY_EXT_GENERATOR_FLAGS-y += -I$(LIBRUBY_BASE)/generated/ext/json/generator
 LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/json/parser/parser.c|json
-LIBRUBY_EXT_PARSER_FLAGS-y += -I$(LIBRUBY_SRC)/ext/json/parser
+LIBRUBY_EXT_PARSER_JSON_FLAGS-y += -I$(LIBRUBY_BASE)/generated/ext/json/parser
 endif
 ifeq ($(CONFIG_LIBRUBY_EXT_RBCONFIG_SIZEOF),y)
 LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/rbconfig/sizeof/sizes.c
 LIBRUBY_EXT_SIZES_FLAGS-y += -I$(LIBRUBY_SRC)/ext/rbconfig/sizeof
 LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/rbconfig/sizeof/limits.c
 LIBRUBY_EXT_LIMITS_FLAGS-y += -I$(LIBRUBY_SRC)/ext/rbconfig/sizeof
-endif
-ifeq ($(CONFIG_LIBRUBY_EXT_BIGDECIMAL),y)
-LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/bigdecimal/bigdecimal.c
-LIBRUBY_EXT_BIGDECIMAL_FLAGS-y += -I$(LIBRUBY_SRC)/ext/bigdecimal
-LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/bigdecimal/util/util.c
-LIBRUBY_EXT_UTIL_FLAGS-y += -I$(LIBRUBY_SRC)/ext/bigdecimal/util
-endif
-ifeq ($(CONFIG_LIBRUBY_EXT_RACC_CPARSE),y)
-LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/racc/cparse/cparse.c
-LIBRUBY_EXT_CPARSE_FLAGS-y += -I$(LIBRUBY_SRC)/ext/racc/cparse
 endif
 ifeq ($(CONFIG_LIBRUBY_EXT_DIGEST),y)
 LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/digest/digest.c
@@ -252,34 +311,6 @@ LIBRUBY_EXT_SHA1INIT_FLAGS-y += -I$(LIBRUBY_SRC)/ext/digest/sha1
 LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/digest/sha2/sha2init.c
 LIBRUBY_EXT_SHA2INIT_FLAGS-y += -I$(LIBRUBY_SRC)/ext/digest/sha2
 endif
-ifeq ($(CONFIG_LIBRUBY_EXT_PSYCH),y)
-LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/psych/psych_to_ruby.c
-LIBRUBY_EXT_PSYCH_TO_RUBY_FLAGS-y += -I$(LIBRUBY_SRC)/ext/psych -I$(LIBRUBY_SRC)/ext/psych/yaml
-LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/psych/psych_yaml_tree.c
-LIBRUBY_EXT_PSYCH_YAML_TREE_FLAGS-y += -I$(LIBRUBY_SRC)/ext/psych -I$(LIBRUBY_SRC)/ext/psych/yaml
-LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/psych/psych_emitter.c
-LIBRUBY_EXT_PSYCH_EMITTER_FLAGS-y += -I$(LIBRUBY_SRC)/ext/psych -I$(LIBRUBY_SRC)/ext/psych/yaml
-LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/psych/psych_parser.c|psych
-LIBRUBY_EXT_PSYCH_PARSER_FLAGS-y += -I$(LIBRUBY_SRC)/ext/psych -I$(LIBRUBY_SRC)/ext/psych/yaml
-LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/psych/psych.c
-LIBRUBY_EXT_PSYCH_FLAGS-y += -I$(LIBRUBY_SRC)/ext/psych -I$(LIBRUBY_SRC)/ext/psych/yaml
-LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/psych/yaml/dumper.c
-LIBRUBY_EXT_DUMPER_FLAGS-y += -I$(LIBRUBY_SRC)/ext/psych -I$(LIBRUBY_SRC)/ext/psych/yaml
-LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/psych/yaml/parser.c|yaml
-LIBRUBY_EXT_PARSER_FLAGS-y += -I$(LIBRUBY_SRC)/ext/psych -I$(LIBRUBY_SRC)/ext/psych/yaml
-LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/psych/yaml/scanner.c
-LIBRUBY_EXT_SCANNER_FLAGS-y += -I$(LIBRUBY_SRC)/ext/psych -I$(LIBRUBY_SRC)/ext/psych/yaml
-LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/psych/yaml/api.c
-LIBRUBY_EXT_API_FLAGS-y += -I$(LIBRUBY_SRC)/ext/psych -I$(LIBRUBY_SRC)/ext/psych/yaml
-LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/psych/yaml/loader.c
-LIBRUBY_EXT_LOADER_FLAGS-y += -I$(LIBRUBY_SRC)/ext/psych -I$(LIBRUBY_SRC)/ext/psych/yaml
-LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/psych/yaml/writer.c
-LIBRUBY_EXT_WRITER_FLAGS-y += -I$(LIBRUBY_SRC)/ext/psych -I$(LIBRUBY_SRC)/ext/psych/yaml
-LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/psych/yaml/emitter.c
-LIBRUBY_EXT_EMITTER_FLAGS-y += -I$(LIBRUBY_SRC)/ext/psych -I$(LIBRUBY_SRC)/ext/psych/yaml
-LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/psych/yaml/reader.c
-LIBRUBY_EXT_READER_FLAGS-y += -I$(LIBRUBY_SRC)/ext/psych -I$(LIBRUBY_SRC)/ext/psych/yaml
-endif
 ifeq ($(CONFIG_LIBRUBY_EXT_CGI_ESCAPE),y)
 LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/cgi/escape/escape.c
 LIBRUBY_EXT_ESCAPE_FLAGS-y += -I$(LIBRUBY_SRC)/ext/cgi/escape
@@ -290,7 +321,7 @@ LIBRUBY_EXT_FCNTL_FLAGS-y += -I$(LIBRUBY_SRC)/ext/fcntl
 endif
 ifeq ($(CONFIG_LIBRUBY_EXT_SOCKET),y)
 LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/socket/init.c|socket
-LIBRUBY_EXT_INIT_FLAGS-y += -I$(LIBRUBY_BASE)/generated/ext/socket
+LIBRUBY_EXT_INIT_SOCKET_FLAGS-y += -I$(LIBRUBY_BASE)/generated/ext/socket
 LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/socket/constants.c
 LIBRUBY_EXT_CONSTANTS_FLAGS-y += -I$(LIBRUBY_BASE)/generated/ext/socket
 LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/socket/basicsocket.c
@@ -320,8 +351,6 @@ LIBRUBY_EXT_RADDRINFO_FLAGS-y += -I$(LIBRUBY_BASE)/generated/ext/socket
 LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/socket/ifaddr.c
 LIBRUBY_EXT_IFADDR_FLAGS-y += -I$(LIBRUBY_BASE)/generated/ext/socket
 endif
-LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/ext/pathname/pathname.c
-LIBRUBY_PATHNAME_FLAGS-y += -I$(LIBRUBY_SRC)/ext/pathname
 ifeq ($(CONFIG_LIBRUBY_EXT_DATE_CORE),y)
 LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/date/date_core.c
 LIBRUBY_EXT_DATE_CORE_FLAGS-y += -I$(LIBRUBY_SRC)/ext/date
@@ -337,8 +366,6 @@ LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/pty/pty.c
 LIBRUBY_EXT_PTY_FLAGS-y += -I$(LIBRUBY_SRC)/ext/pty
 endif
 ifeq ($(CONFIG_LIBRUBY_EXT_OPENSSL),y)
-LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/openssl/openssl_missing.c
-LIBRUBY_EXT_OPENSSL_MISSING_FLAGS-y += -I$(LIBRUBY_SRC)/ext/openssl
 LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/openssl/ossl.c
 LIBRUBY_EXT_OSSL_FLAGS-y += -I$(LIBRUBY_SRC)/ext/openssl
 LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/openssl/ossl_asn1.c
@@ -403,24 +430,11 @@ LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/openssl/ossl_x509store.c
 LIBRUBY_EXT_OSSL_X509STORE_FLAGS-y += -I$(LIBRUBY_SRC)/ext/openssl
 endif
 LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/ext/stringio/stringio.c
-LIBRUBY_STRINGIO_FLAGS-y += -I$(LIBRUBY_SRC)/ext/stringio
-ifeq ($(CONFIG_LIBRUBY_EXT_FIBER),y)
-LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/fiber/fiber.c
-LIBRUBY_EXT_FIBER_FLAGS-y += -I$(LIBRUBY_SRC)/ext/fiber
-endif
-ifeq ($(CONFIG_LIBRUBY_EXT_FIDDLE),y)
-LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/fiddle/closure.c
-LIBRUBY_EXT_CLOSURE_FLAGS-y += -I$(LIBRUBY_SRC)/ext/fiddle
-LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/fiddle/conversions.c
-LIBRUBY_EXT_CONVERSIONS_FLAGS-y += -I$(LIBRUBY_SRC)/ext/fiddle
-LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/fiddle/fiddle.c
-LIBRUBY_EXT_FIDDLE_FLAGS-y += -I$(LIBRUBY_SRC)/ext/fiddle
-LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/fiddle/function.c
-LIBRUBY_EXT_FUNCTION_FLAGS-y += -I$(LIBRUBY_SRC)/ext/fiddle
-LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/fiddle/handle.c
-LIBRUBY_EXT_HANDLE_FLAGS-y += -I$(LIBRUBY_SRC)/ext/fiddle
-LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/fiddle/pointer.c
-LIBRUBY_EXT_POINTER_FLAGS-y += -I$(LIBRUBY_SRC)/ext/fiddle
+LIBRUBY_STRINGIO_FLAGS-y += -I$(LIBRUBY_BASE)/generated/ext/stringio \
+	-DRUBY_EXTCONF_H=\"extconf.h\"
+ifeq ($(CONFIG_LIBRUBY_EXT_MONITOR),y)
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/monitor/monitor.c
+LIBRUBY_EXT_MONITOR_FLAGS-y += -I$(LIBRUBY_SRC)/ext/monitor
 endif
 ifeq ($(CONFIG_LIBRUBY_EXT_ETC),y)
 LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/etc/etc.c
@@ -458,19 +472,9 @@ ifeq ($(CONFIG_LIBRUBY_EXT_RIPPER),y)
 LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/ripper/ripper.c
 LIBRUBY_EXT_RIPPER_FLAGS-y += -I$(LIBRUBY_SRC)/ext/ripper
 endif
-ifeq ($(CONFIG_LIBRUBY_EXT_NKF),y)
-LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/nkf/nkf.c
-LIBRUBY_EXT_NKF_FLAGS-y += -I$(LIBRUBY_SRC)/ext/nkf
-endif
 ifeq ($(CONFIG_LIBRUBY_EXT_ZLIB),y)
 LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/zlib/zlib.c
 LIBRUBY_EXT_ZLIB_FLAGS-y += -I$(LIBRUBY_SRC)/ext/zlib
-endif
-ifeq ($(CONFIG_LIBRUBY_EXT_SDBM),y)
-LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/sdbm/_sdbm.c
-LIBRUBY_EXT__SDBM_FLAGS-y += -I$(LIBRUBY_SRC)/ext/sdbm
-LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/sdbm/init.c|sdbm
-LIBRUBY_EXT_INIT_FLAGS-y += -I$(LIBRUBY_SRC)/ext/sdbm
 endif
 
 ################################################################################
@@ -492,6 +496,7 @@ endif
 # enc/libenc.a
 LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/encdb.c
 LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/big5.c
+LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/cesu_8.c
 LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/cp949.c
 LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/emacs_mule.c
 LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/euc_jp.c
@@ -533,6 +538,7 @@ LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/windows_1257.c
 # enc/libtrans.a
 LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/trans/transdb.c
 LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/trans/big5.c|trans
+LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/trans/cesu_8.c|trans
 LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/trans/chinese.c
 LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/trans/ebcdic.c
 LIBRUBY_ENC_SRCS-y += $(LIBRUBY_SRC)/enc/trans/emoji.c
@@ -559,21 +565,20 @@ LIBRUBY_TEST_CFLAGS-y += $(LIBRUBY_CINCLUDES-y)
 LIBRUBY_TEST_CFLAGS-y += $(LIBRUBY_SUPPRESS_FLAGS-y)
 LIBRUBY_TEST_CFLAGS-y += -DRUBY_EXTCONF_H=\"extconf.h\"
 
-$(LIBRUBY_SRC)/ext/-test-/file/init_file.c: $(LIBRUBY_SRC)/ext/-test-/file/init.c
-	ln -s $< $@
-LIBRUBY_TEST_SRCS-y += $(LIBRUBY_SRC)/ext/-test-/file/init_file.c
+# Both -test- extensions have an `init.c`, and objects are keyed by basename
+# alone, so the two would collide. Upstream glue symlinked them to
+# `init_file.c` / `init_time.c`; the `|` variant suffix does the same job
+# without writing into the fetched source tree, and produces exactly the
+# LIBRUBY_TEST_INIT_FILE_FLAGS / _INIT_TIME_FLAGS names already used below.
+LIBRUBY_TEST_SRCS-y += $(LIBRUBY_SRC)/ext/-test-/file/init.c|file
 LIBRUBY_TEST_INIT_FILE_FLAGS-y += -I$(LIBRUBY_SRC)/ext/-test-/file
 LIBRUBY_TEST_SRCS-y += $(LIBRUBY_SRC)/ext/-test-/file/fs.c
 LIBRUBY_TEST_FS_FLAGS-y += -I$(LIBRUBY_SRC)/ext/-test-/file
 LIBRUBY_TEST_SRCS-y += $(LIBRUBY_SRC)/ext/-test-/file/stat.c
 LIBRUBY_TEST_STAT_FLAGS-y += -I$(LIBRUBY_SRC)/ext/-test-/file
 
-$(LIBRUBY_SRC)/ext/-test-/time/init_time.c: $(LIBRUBY_SRC)/ext/-test-/time/init.c
-	ln -s $< $@
-LIBRUBY_TEST_SRCS-y += $(LIBRUBY_SRC)/ext/-test-/time/init_time.c
+LIBRUBY_TEST_SRCS-y += $(LIBRUBY_SRC)/ext/-test-/time/init.c|time
 LIBRUBY_TEST_INIT_TIME_FLAGS-y += -I$(LIBRUBY_SRC)/ext/-test-/time
-LIBRUBY_TEST_SRCS-y += $(LIBRUBY_SRC)/ext/-test-/time/leap_second.c
-LIBRUBY_TEST_LEAP_SECOND_FLAGS-y += -I$(LIBRUBY_SRC)/ext/-test-/time
 LIBRUBY_TEST_SRCS-y += $(LIBRUBY_SRC)/ext/-test-/time/new.c
 LIBRUBY_TEST_NEW_FLAGS-y += -I$(LIBRUBY_SRC)/ext/-test-/time
 
@@ -584,10 +589,22 @@ NPROC=$(shell nproc)
 JOBS=$(shell echo $(NPROC) \* 2 | bc)
 LIBRUBY_CONFIGURE_COMMON_PARAMS=--with-static-linked-ext --disable-install-doc --disable-install-rdoc
 
+# YJIT and ZJIT are written in Rust and emit native code at run time. Neither
+# can work on a unikernel, and YJIT is enabled by default whenever `configure`
+# finds a usable `rustc`, which would make the build depend on whether the host
+# happens to have a Rust toolchain installed. Turn both off explicitly.
+LIBRUBY_CONFIGURE_COMMON_PARAMS += --disable-yjit --disable-zjit
+
+# The `openssl` extension needs the OpenSSL headers on the host. Only build it
+# when the unikernel build actually selects it, so that libssl-dev is not a
+# hard build dependency of every Ruby unikernel.
+ifneq ($(CONFIG_LIBRUBY_EXT_OPENSSL),y)
+LIBRUBY_CONFIGURE_COMMON_PARAMS += --with-out-ext=openssl
+endif
+
 # Configure origin
 $(LIBRUBY_BUILD)/.configured: $(LIBRUBY_BUILD)/.origin
 	cd $(LIBRUBY_SRC) && \
-		autoconf && \
 		./configure $(LIBRUBY_CONFIGURE_COMMON_PARAMS) && \
 		touch $@
 
@@ -623,7 +640,6 @@ RUBY_ROOTFS = $(APP_BASE)/$(path)
 $(RUBY_ROOTFS)/.configured: $(LIBRUBY_BUILD)/.origin
 	mkdir -p $(RUBY_ROOTFS) &>/dev/null
 	cd $(LIBRUBY_SRC) && \
-		autoconf && \
 		./configure --prefix=$(shell realpath $(APP_BASE)/$(path)) $(LIBRUBY_CONFIGURE_COMMON_PARAMS) && \
 		touch $@ && touch $(LIBRUBY_BUILD)/.configured
 
@@ -634,9 +650,9 @@ $(RUBY_ROOTFS)/.build: $(RUBY_ROOTFS)/.configured
 # Install Ruby
 $(RUBY_ROOTFS)/.done: $(RUBY_ROOTFS)/.build
 	cd $(LIBRUBY_SRC) && make install
-	cp -r $(LIBRUBY_SRC)/.ext $(RUBY_ROOTFS)/lib/ruby/$(LIBRUBY_VERSION_LONG)/
-	cp -r $(LIBRUBY_SRC)/test $(RUBY_ROOTFS)/lib/ruby/$(LIBRUBY_VERSION_LONG)/
-	cp $(LIBRUBY_BASE)/gems-examples/Gemfile-irb $(RUBY_ROOTFS)/lib/ruby/$(LIBRUBY_VERSION_LONG)/Gemfile
+	cp -r $(LIBRUBY_SRC)/.ext $(RUBY_ROOTFS)/lib/ruby/$(LIBRUBY_RUBY_VERSION)/
+	cp -r $(LIBRUBY_SRC)/test $(RUBY_ROOTFS)/lib/ruby/$(LIBRUBY_RUBY_VERSION)/
+	cp $(LIBRUBY_BASE)/gems-examples/Gemfile-irb $(RUBY_ROOTFS)/lib/ruby/$(LIBRUBY_RUBY_VERSION)/Gemfile
 	touch $@
 
 .PHONY: ruby-rootfs
