@@ -114,8 +114,9 @@ LIBRUBY_RUBY_MAIN_EXAMPLE_UNIKRAFT_FLAGS-y =-DLIBRUBY_RUBY_VERSION=\"$(LIBRUBY_R
 
 ifeq ($(CONFIG_LIBRUBY_MINI),y)
 LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/dmydln.c
+# miniinit.c defines Init_ext/Init_enc and #includes mini_builtin.c, which
+# #includes miniprelude.c, so neither dmyext.c nor miniprelude.c is built.
 LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/miniinit.c
-LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/miniprelude.c
 else
 LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/dln.c
 LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/localeinit.c
@@ -275,9 +276,8 @@ LIBRUBY_EXT_CFLAGS-y += $(LIBRUBY_CINCLUDES-y)
 LIBRUBY_EXT_CFLAGS-y += $(LIBRUBY_SUPPRESS_FLAGS-y)
 LIBRUBY_EXT_CFLAGS-y += -DRUBY_EXTCONF_H=\"extconf.h\"
 
-ifeq ($(CONFIG_LIBRUBY_MINI),y)
-LIBRUBY_SRCS-y += $(LIBRUBY_SRC)/dmyext.c
-else
+# With MINI, Init_ext() comes from miniinit.c.
+ifneq ($(CONFIG_LIBRUBY_MINI),y)
 LIBRUBY_SRCS-y += $(LIBRUBY_BASE)/generated/ext/extinit.c
 endif
 
@@ -404,12 +404,16 @@ LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/openssl/ossl_pkey_ec.c
 LIBRUBY_EXT_OSSL_PKEY_EC_FLAGS-y += -I$(LIBRUBY_SRC)/ext/openssl
 LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/openssl/ossl_pkey_rsa.c
 LIBRUBY_EXT_OSSL_PKEY_RSA_FLAGS-y += -I$(LIBRUBY_SRC)/ext/openssl
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/openssl/ossl_provider.c
+LIBRUBY_EXT_OSSL_PROVIDER_FLAGS-y += -I$(LIBRUBY_SRC)/ext/openssl
 LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/openssl/ossl_rand.c
 LIBRUBY_EXT_OSSL_RAND_FLAGS-y += -I$(LIBRUBY_SRC)/ext/openssl
 LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/openssl/ossl_ssl.c
 LIBRUBY_EXT_OSSL_SSL_FLAGS-y += -I$(LIBRUBY_SRC)/ext/openssl
 LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/openssl/ossl_ssl_session.c
 LIBRUBY_EXT_OSSL_SSL_SESSION_FLAGS-y += -I$(LIBRUBY_SRC)/ext/openssl
+LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/openssl/ossl_ts.c
+LIBRUBY_EXT_OSSL_TS_FLAGS-y += -I$(LIBRUBY_SRC)/ext/openssl
 LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/openssl/ossl_x509.c
 LIBRUBY_EXT_OSSL_X509_FLAGS-y += -I$(LIBRUBY_SRC)/ext/openssl
 LIBRUBY_EXT_SRCS-y += $(LIBRUBY_SRC)/ext/openssl/ossl_x509attr.c
@@ -574,6 +578,8 @@ LIBRUBY_TEST_SRCS-y += $(LIBRUBY_SRC)/ext/-test-/file/init.c|file
 LIBRUBY_TEST_INIT_FILE_FLAGS-y += -I$(LIBRUBY_SRC)/ext/-test-/file
 LIBRUBY_TEST_SRCS-y += $(LIBRUBY_SRC)/ext/-test-/file/fs.c
 LIBRUBY_TEST_FS_FLAGS-y += -I$(LIBRUBY_SRC)/ext/-test-/file
+LIBRUBY_TEST_SRCS-y += $(LIBRUBY_SRC)/ext/-test-/file/newline_conv.c
+LIBRUBY_TEST_NEWLINE_CONV_FLAGS-y += -I$(LIBRUBY_SRC)/ext/-test-/file
 LIBRUBY_TEST_SRCS-y += $(LIBRUBY_SRC)/ext/-test-/file/stat.c
 LIBRUBY_TEST_STAT_FLAGS-y += -I$(LIBRUBY_SRC)/ext/-test-/file
 
