@@ -375,8 +375,14 @@
 #define HAVE_MKFIFO 1
 #define HAVE_MKNOD 1
 #define HAVE_MKTIME 1
-#define HAVE_MMAP 1
-#define HAVE_MREMAP 1
+/* UNIKRAFT: ukmmap's munmap ignores partial unmaps, so the GC's aligned
+ * heap-page allocation would leak; keep the GC on posix_memalign/free.
+ */
+/* #define HAVE_MMAP 1 */
+/* UNIKRAFT: ukmmap's mremap is a stub returning NULL, not MAP_FAILED, which
+ * IO::Buffer#resize would treat as success; use its copy fallback.
+ */
+/* #define HAVE_MREMAP 1 */
 #define HAVE_OPENAT 1
 /* UNIKRAFT: no process spawning */
 /* #define HAVE_PCLOSE 1 */
